@@ -350,18 +350,18 @@ const options = {
 
 ## AI Provider Configuration
 
-Configure AI providers in `lib/ai/provider.ts`:
+Quail configures Azure AI inline in each API route:
 
-```typescript lib/ai/provider.ts
+```typescript app/app/api/biChat/route.ts
 import { createAzure } from '@ai-sdk/azure';
 
 // Azure OpenAI configuration
 const azure = createAzure({
-  apiKey: process.env.AZURE_OPENAI_API_KEY!,
-  endpoint: process.env.AZURE_OPENAI_ENDPOINT!,
+  resourceName: process.env.NEXT_PUBLIC_AZURE_RESOURCE_NAME!,
+  apiKey: process.env.NEXT_PUBLIC_AZURE_API_KEY!,
 });
 
-export const model = azure(process.env.AZURE_OPENAI_DEPLOYMENT_NAME!);
+// Model selection is dynamic based on request parameters
 ```
 
 ### Switching AI Providers

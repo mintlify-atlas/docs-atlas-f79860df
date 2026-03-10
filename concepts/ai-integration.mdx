@@ -31,15 +31,15 @@ Quail BI leverages large language models (LLMs) to transform natural language qu
 
 Quail is configured to use Azure OpenAI Service through the Vercel AI SDK:
 
-```typescript lib/ai/provider.ts
+```typescript app/app/api/biChat/route.ts
 import { createAzure } from '@ai-sdk/azure';
 
 const azure = createAzure({
-  apiKey: process.env.AZURE_OPENAI_API_KEY!,
-  endpoint: process.env.AZURE_OPENAI_ENDPOINT!,
+  resourceName: process.env.NEXT_PUBLIC_AZURE_RESOURCE_NAME!,
+  apiKey: process.env.NEXT_PUBLIC_AZURE_API_KEY!,
 });
 
-export const model = azure(process.env.AZURE_OPENAI_DEPLOYMENT_NAME!);
+// Model is selected based on speed mode in the request
 ```
 
 <Info>
@@ -52,9 +52,9 @@ Configure these environment variables in `.env.local`:
 
 ```bash .env.local
 # Azure AI Configuration
-AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
-AZURE_OPENAI_API_KEY=your-api-key-here
-AZURE_OPENAI_DEPLOYMENT_NAME=gpt-4o
+NEXT_PUBLIC_AZURE_RESOURCE_NAME=your-resource-name
+NEXT_PUBLIC_AZURE_API_KEY=your-api-key-here
+NEXT_PUBLIC_AZURE_FUNCTION_ENDPOINT=https://your-function.azurewebsites.net
 ```
 
 <Tabs>

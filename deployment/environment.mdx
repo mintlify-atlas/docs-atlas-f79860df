@@ -121,27 +121,39 @@ Leave empty in production or provide a read-only demo database.
 ### Azure AI Configuration
 
 ```bash .env.local
-AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
-AZURE_OPENAI_API_KEY=your-api-key
-AZURE_OPENAI_DEPLOYMENT_NAME=gpt-4o
+NEXT_PUBLIC_AZURE_RESOURCE_NAME=your-resource-name
+NEXT_PUBLIC_AZURE_API_KEY=your-api-key
+NEXT_PUBLIC_AZURE_FUNCTION_ENDPOINT=https://your-function.azurewebsites.net
 ```
 
 <Info>
   **Purpose**: Enables AI-powered features like natural language to SQL, chart generation, and query explanations.
 </Info>
 
+<CardGroup cols={3}>
+  <Card title="RESOURCE_NAME" icon="server">
+    Your Azure OpenAI resource name (not the full endpoint URL)
+  </Card>
+  <Card title="API_KEY" icon="key">
+    API key from Azure OpenAI resource
+  </Card>
+  <Card title="FUNCTION_ENDPOINT" icon="function">
+    Azure Function endpoint for AI processing (optional)
+  </Card>
+</CardGroup>
+
 <Steps>
   <Step title="Create Azure OpenAI Resource">
     In Azure Portal, create an Azure OpenAI resource
   </Step>
-  <Step title="Deploy Model">
-    Deploy a GPT-4 or GPT-4o model
+  <Step title="Get Resource Name">
+    Copy the resource name (e.g., `quail-openai` from `quail-openai.openai.azure.com`)
   </Step>
-  <Step title="Get Credentials">
-    Copy the endpoint URL and API key from **Keys and Endpoint**
+  <Step title="Get API Key">
+    Copy the API key from **Keys and Endpoint** in the Azure Portal
   </Step>
-  <Step title="Set Deployment Name">
-    Use the exact deployment name you created (e.g., `gpt-4o`, `gpt-4-turbo`)
+  <Step title="Configure Function Endpoint (Optional)">
+    If using Azure Functions for AI processing, set the function app URL
   </Step>
 </Steps>
 
@@ -152,17 +164,29 @@ AZURE_OPENAI_DEPLOYMENT_NAME=gpt-4o
 ### Stripe Configuration
 
 ```bash .env.local
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
-STRIPE_SECRET_KEY=sk_test_...
-STRIPE_WEBHOOK_SECRET=whsec_...
+NEXT_PUBLIC_STRIPE_PK=pk_test_...
+STRIPE_SK=sk_test_...
+STRIPE_ENDPOINT_SECRET=whsec_...
 ```
 
 <Info>
-  **Purpose**: Enables subscription billing and payment processing (if implementing paid features).
+  **Purpose**: Enables subscription billing and payment processing for Free and Pro tiers.
 </Info>
 
+<CardGroup cols={3}>
+  <Card title="STRIPE_PK" icon="credit-card">
+    Publishable key for client-side Stripe integration
+  </Card>
+  <Card title="STRIPE_SK" icon="key">
+    Secret key for server-side payment processing
+  </Card>
+  <Card title="ENDPOINT_SECRET" icon="webhook">
+    Webhook secret for validating Stripe events
+  </Card>
+</CardGroup>
+
 <Note>
-  Stripe integration is optional. Quail can run without payment processing.
+  Quail has two pricing tiers: **Free** (limited monthly usage) and **Pro** (unlimited). Stripe integration is required for Pro subscriptions.
 </Note>
 
 ### Application URL
@@ -198,9 +222,11 @@ NEXT_PUBLIC_ENCRYPTION_KEY=
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
+SUPABASE_ADMIN=
 
 # MongoDB Configuration (REQUIRED)
 MONGODB_URI=
+MONGODB_DB_NAME=quail
 
 # ========================================
 # OPTIONAL VARIABLES
@@ -210,17 +236,21 @@ MONGODB_URI=
 NEXT_PUBLIC_DEFAULT_DB_CONNECTION_STRING=
 
 # Azure AI Configuration (optional)
-AZURE_OPENAI_ENDPOINT=
-AZURE_OPENAI_API_KEY=
-AZURE_OPENAI_DEPLOYMENT_NAME=
+NEXT_PUBLIC_AZURE_RESOURCE_NAME=
+NEXT_PUBLIC_AZURE_API_KEY=
+NEXT_PUBLIC_AZURE_FUNCTION_ENDPOINT=
 
-# Stripe Configuration (optional)
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
-STRIPE_SECRET_KEY=
-STRIPE_WEBHOOK_SECRET=
+# Stripe Configuration (optional for Free tier, required for Pro)
+NEXT_PUBLIC_STRIPE_PK=
+STRIPE_SK=
+STRIPE_ENDPOINT_SECRET=
+
+# Usage Limits
+FREE_TIER_MONTHLY_LIMIT=100
 
 # Application Settings (optional)
 NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
 ```
 
 ## Platform-Specific Configuration
