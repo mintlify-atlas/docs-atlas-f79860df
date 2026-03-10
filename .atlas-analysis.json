@@ -1,0 +1,101 @@
+{
+  "projectType": "saas",
+  "projectName": "Quail BI",
+  "projectDescription": "An AI-powered Natural Language BI Platform and SQL Editor for data analysis and visualization",
+  "theme": "almond",
+  "primaryColor": "#040404",
+  "lightColor": "#747474",
+  "darkColor": "#1c1d1d",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Overview",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "features"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "User Guide",
+        "groups": [
+          {
+            "group": "Core Features",
+            "pages": [
+              "guide/connections",
+              "guide/sql-editor",
+              "guide/chat",
+              "guide/charts",
+              "guide/dashboards"
+            ]
+          },
+          {
+            "group": "Advanced",
+            "pages": [
+              "guide/schema-explorer",
+              "guide/data-export"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Concepts",
+        "groups": [
+          {
+            "group": "Architecture",
+            "pages": [
+              "concepts/agentic-hydration",
+              "concepts/security",
+              "concepts/ai-integration"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Deployment",
+        "groups": [
+          {
+            "group": "Self-Hosting",
+            "pages": [
+              "deployment/installation",
+              "deployment/environment",
+              "deployment/configuration",
+              "deployment/database-setup"
+            ]
+          },
+          {
+            "group": "Operations",
+            "pages": [
+              "deployment/troubleshooting",
+              "deployment/security-best-practices"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "AI-Assisted SQL Querying with Natural Language",
+    "Interactive Data Visualization and Charts",
+    "Customizable Dashboards",
+    "Secure Database Connection Management",
+    "SQL Editor with Schema-Aware Assistance",
+    "Agentic Hydration Pattern for Efficient AI Component Generation",
+    "Chat Interface for Conversational Data Exploration",
+    "Encrypted Credential Storage"
+  ],
+  "publicApiSurface": [
+    "POST /api/biChat - AI-powered BI chat endpoint",
+    "POST /api/chat - General chat endpoint",
+    "POST /api/chartEditor - Chart generation and editing",
+    "Database Connections API",
+    "Dashboard Management",
+    "Chart Generation",
+    "SQL Query Execution"
+  ]
+}
