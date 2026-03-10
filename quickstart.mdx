@@ -1,80 +1,445 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: Quick Start
+description: Get up and running with Quail in minutes. Learn how to install, configure, and connect your first database.
 ---
 
-## Get started in three steps
+## Prerequisites
 
-Get your documentation site running locally and make your first customization.
-
-### Step 1: Set up your local environment
-
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 2: Deploy your changes
-
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
-
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
-
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 3: Go live
-
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
-
-## Next steps
-
-Now that you have your docs running, explore these key features:
+Before you begin, ensure you have the following installed and configured:
 
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="Node.js" icon="node-js">
+    Version 18.17.0 or higher
+  </Card>
+  <Card title="pnpm" icon="box">
+    Version 10.10.0 (package manager)
+  </Card>
+  <Card title="MongoDB" icon="database">
+    A MongoDB instance for storing metadata
+  </Card>
+  <Card title="Supabase" icon="shield">
+    A Supabase account for authentication
+  </Card>
 </CardGroup>
 
+<Warning>
+  Quail is a discontinued project. This guide is provided for educational purposes and self-hosting.
+</Warning>
+
+## Installation
+
+<Steps>
+  <Step title="Clone the Repository">
+    Start by cloning the Quail repository from GitHub:
+
+    ```bash
+    git clone https://github.com/O1af/quail.git
+    cd quail
+    ```
+  </Step>
+
+  <Step title="Install Dependencies">
+    Install all required packages using pnpm:
+
+    ```bash
+    pnpm install
+    ```
+
+    <Info>
+      The installation process may take a few minutes as it downloads all dependencies.
+    </Info>
+  </Step>
+
+  <Step title="Configure Environment Variables">
+    Copy the example environment file and configure your settings:
+
+    ```bash
+    cp .env.example .env.local
+    ```
+
+    Open `.env.local` and configure the required variables.
+  </Step>
+</Steps>
+
+## Environment Configuration
+
+### Required Variables
+
+These environment variables are **required** for Quail to function:
+
+<CodeGroup>
+
+```bash .env.local
+# Encryption Key (REQUIRED)
+# Generate with: openssl rand -base64 32
+NEXT_PUBLIC_ENCRYPTION_KEY=your-32-character-encryption-key
+
+# Supabase Configuration (REQUIRED)
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
+
+# MongoDB Configuration (REQUIRED)
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/quail
+
+# Application URL
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+</CodeGroup>
+
+### Generate Encryption Key
+
+The encryption key is used to secure database credentials. Generate a secure key using OpenSSL:
+
+```bash
+openssl rand -base64 32
+```
+
+<Warning>
+  Store your encryption key securely. If you lose it, you won't be able to decrypt existing database connections.
+</Warning>
+
+### Supabase Setup
+
+1. Create a new project at [supabase.com](https://supabase.com)
+2. Navigate to **Settings** → **API**
+3. Copy your **Project URL** to `NEXT_PUBLIC_SUPABASE_URL`
+4. Copy the **anon/public** key to `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+5. Copy the **service_role** key to `SUPABASE_SERVICE_ROLE_KEY`
+
+<Info>
+  Supabase provides authentication, user management, and secure session handling for Quail.
+</Info>
+
+### MongoDB Setup
+
+Quail uses MongoDB to store:
+- User profiles and settings
+- Dashboard configurations
+- Chart definitions
+- Chat history
+- Saved queries
+
+You can use:
+- **MongoDB Atlas** (cloud-hosted, free tier available)
+- **Local MongoDB** instance
+- **Docker** container
+
+```bash
+# MongoDB Atlas connection string format
+mongodb+srv://<username>:<password>@<cluster-url>/<database>?retryWrites=true&w=majority
+
+# Local MongoDB connection string format
+mongodb://localhost:27017/quail
+```
+
+### Optional Variables
+
+<CodeGroup>
+
+```bash .env.local
+# Azure AI Configuration (for AI features)
+AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
+AZURE_OPENAI_API_KEY=your-azure-openai-key
+AZURE_OPENAI_DEPLOYMENT_NAME=gpt-4
+
+# Stripe Configuration (for billing)
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+
+# Default Database Connection (optional demo database)
+NEXT_PUBLIC_DEFAULT_DB_CONNECTION_STRING=postgres://demo:password@localhost:5432/demo
+```
+
+</CodeGroup>
+
 <Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
+  Azure AI configuration is required for AI-powered SQL generation and chart recommendations. Without it, these features will not function.
 </Note>
+
+## Running Quail
+
+<Steps>
+  <Step title="Start Development Server">
+    Launch the development server with hot reloading:
+
+    ```bash
+    pnpm dev
+    ```
+
+    The application will be available at [http://localhost:3000](http://localhost:3000)
+  </Step>
+
+  <Step title="Create Your Account">
+    1. Navigate to [http://localhost:3000](http://localhost:3000)
+    2. Click **Sign Up**
+    3. Enter your email and password
+    4. Verify your email address (check Supabase email settings)
+  </Step>
+
+  <Step title="Complete Initial Setup">
+    After logging in, you'll see the onboarding flow. Complete these steps:
+
+    - Configure your profile settings
+    - Review the feature tour
+    - Explore the interface
+  </Step>
+</Steps>
+
+## Connecting Your First Database
+
+<Steps>
+  <Step title="Navigate to Connections">
+    Click on **Connections** in the sidebar to access the database connection manager.
+  </Step>
+
+  <Step title="Add New Connection">
+    Click the **Add Connection** button in the top-right corner.
+  </Step>
+
+  <Step title="Enter Database Details">
+    Fill in the connection form with your database information:
+
+    <CodeGroup>
+
+    ```text PostgreSQL
+    Connection Name: My Production DB
+    Database Type: PostgreSQL
+    Host: localhost
+    Port: 5432
+    Database: mydb
+    Username: readonly_user
+    Password: ••••••••••
+    ```
+
+    ```text MySQL
+    Connection Name: Analytics DB
+    Database Type: MySQL
+    Host: mysql.example.com
+    Port: 3306
+    Database: analytics
+    Username: analyst
+    Password: ••••••••••
+    ```
+
+    ```text SQL Server
+    Connection Name: Sales Data
+    Database Type: SQL Server
+    Host: sqlserver.example.com
+    Port: 1433
+    Database: sales
+    Username: reader
+    Password: ••••••••••
+    ```
+
+    </CodeGroup>
+
+    <Warning>
+      Use read-only database credentials for security. Quail only executes SELECT queries, but using read-only credentials adds an extra layer of protection.
+    </Warning>
+  </Step>
+
+  <Step title="Test Connection">
+    Click **Test Connection** to verify that Quail can connect to your database.
+
+    If the test fails:
+    - Verify your credentials are correct
+    - Check that your database allows connections from your IP
+    - Ensure the database server is running
+    - Verify firewall rules allow the connection
+  </Step>
+
+  <Step title="Save Connection">
+    Once the test succeeds, click **Save** to store the connection.
+
+    <Info>
+      Your credentials are encrypted using AES-256 encryption before being stored in MongoDB.
+    </Info>
+  </Step>
+
+  <Step title="Explore Schema">
+    After saving, click on your connection to view the database schema:
+
+    - Browse tables and views
+    - Inspect column types
+    - View indexes and constraints
+    - Explore relationships
+  </Step>
+</Steps>
+
+## Running Your First Query
+
+<Steps>
+  <Step title="Open the Editor">
+    Navigate to the **Editor** page from the sidebar.
+  </Step>
+
+  <Step title="Select Your Database">
+    Choose your connected database from the dropdown in the header.
+  </Step>
+
+  <Step title="Ask a Natural Language Question">
+    In the chat input at the bottom, type a question about your data:
+
+    <CodeGroup>
+
+    ```text Sales Example
+    What were our total sales by month for the last year?
+    ```
+
+    ```text Customer Example
+    Show me the top 10 customers by revenue
+    ```
+
+    ```text Product Example
+    Which products have the highest profit margins?
+    ```
+
+    </CodeGroup>
+  </Step>
+
+  <Step title="Review Generated SQL">
+    Quail's AI will:
+    1. Analyze your question
+    2. Examine your database schema
+    3. Generate an optimized SQL query
+    4. Display the query in the SQL editor
+
+    ```sql
+    SELECT 
+      DATE_TRUNC('month', order_date) as month,
+      SUM(total_amount) as total_sales
+    FROM orders
+    WHERE order_date >= CURRENT_DATE - INTERVAL '1 year'
+    GROUP BY DATE_TRUNC('month', order_date)
+    ORDER BY month;
+    ```
+  </Step>
+
+  <Step title="Execute and Visualize">
+    Click the **Run** button to execute the query.
+
+    Quail will:
+    1. Execute the SQL query
+    2. Display results in a table
+    3. Automatically generate appropriate visualizations
+    4. Provide insights about the data
+  </Step>
+
+  <Step title="Save Your Chart">
+    If you're happy with the visualization:
+
+    1. Click **Save Chart** in the header
+    2. Give it a descriptive name
+    3. Add it to a dashboard (optional)
+    4. Share with team members (optional)
+  </Step>
+</Steps>
+
+## Creating Your First Dashboard
+
+<Steps>
+  <Step title="Navigate to Dashboards">
+    Click **Dashboards** in the sidebar.
+  </Step>
+
+  <Step title="Create New Dashboard">
+    Click **Create Dashboard** button and enter:
+
+    - **Title**: Q1 2024 Sales Analysis
+    - **Description**: Overview of sales performance and trends
+  </Step>
+
+  <Step title="Add Charts">
+    In the dashboard editor:
+
+    1. Click **Add Chart**
+    2. Select from your saved charts
+    3. Drag and resize to arrange
+    4. Customize colors and styles
+  </Step>
+
+  <Step title="Configure Refresh">
+    Set up automatic data refresh:
+
+    - Real-time (WebSocket)
+    - Every 5 minutes
+    - Every hour
+    - Manual only
+  </Step>
+
+  <Step title="Share Your Dashboard">
+    Click the **Share** button to:
+
+    - Generate a shareable link
+    - Invite team members by email
+    - Set view/edit permissions
+    - Export as PDF
+  </Step>
+</Steps>
+
+## Production Deployment
+
+For production deployment, build the application:
+
+```bash
+pnpm build
+pnpm start
+```
+
+The build process:
+1. Compiles TypeScript to JavaScript
+2. Optimizes React components
+3. Generates static pages where possible
+4. Creates a standalone deployment package
+
+<Info>
+  The build output is located in `.next/standalone` and includes all necessary files for deployment.
+</Info>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Explore Features" icon="compass" href="/features">
+    Learn about all the powerful features Quail offers
+  </Card>
+  <Card title="Configure Speed Mode" icon="gauge">
+    Optimize AI response times with different speed modes
+  </Card>
+  <Card title="Set Up Team Access" icon="users">
+    Configure permissions and share dashboards with your team
+  </Card>
+  <Card title="Export Data" icon="download">
+    Learn how to export data in CSV, Excel, and PDF formats
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+### Application Won't Start
+
+<Tip>
+  Check that all required environment variables are set. Missing `NEXT_PUBLIC_ENCRYPTION_KEY` will cause startup failure.
+</Tip>
+
+### Database Connection Fails
+
+- Verify credentials are correct
+- Check firewall rules
+- Ensure database server is accessible
+- Test connection with a database client first
+
+### AI Features Not Working
+
+- Verify Azure OpenAI credentials are configured
+- Check API quota and usage limits
+- Ensure deployment name matches your Azure configuration
+
+### Charts Not Rendering
+
+- Check browser console for errors
+- Verify data format is compatible with chart type
+- Try a different chart type
+- Clear browser cache and reload

@@ -1,0 +1,130 @@
+---
+title: Introduction
+description: Discover Quail, an AI-powered natural language BI platform and SQL editor for effortless data analysis and visualization.
+---
+
+## Welcome to Quail
+
+Quail is a discontinued AI-powered Natural Language BI Platform and SQL Editor built with Next.js and TypeScript. It enables users to query SQL databases, generate charts, and gain business insights using conversational AI.
+
+<Note>
+  Quail is a discontinued project but remains available as an open-source reference implementation for AI-powered data analysis platforms.
+</Note>
+
+## What is Quail?
+
+Quail transforms how you interact with your data by combining natural language processing with powerful SQL capabilities. Instead of writing complex queries manually, you can ask questions in plain English and let the AI generate optimized SQL queries, execute them, and visualize the results.
+
+<CardGroup cols={2}>
+  <Card title="Natural Language Queries" icon="message">
+    Ask questions in plain English and get SQL queries generated automatically with AI assistance.
+  </Card>
+  <Card title="Interactive Visualizations" icon="chart-line">
+    Create dynamic charts and dashboards from your query results with intelligent chart recommendations.
+  </Card>
+  <Card title="Secure Database Connections" icon="shield">
+    Connect to multiple databases with encrypted credentials and read-only query execution for security.
+  </Card>
+  <Card title="Real-time Collaboration" icon="users">
+    Share dashboards and insights with your team with built-in sharing capabilities.
+  </Card>
+</CardGroup>
+
+## Key Capabilities
+
+### AI-Powered SQL Generation
+
+Quail's AI engine understands your natural language questions and generates syntactically correct SQL queries tailored to your database schema. The system analyzes your database structure and creates optimized queries that leverage indexes and proper joins.
+
+### Intelligent Data Visualization
+
+The platform automatically recommends the most appropriate chart types based on your data characteristics. Whether you need bar charts, line graphs, pie charts, scatter plots, or radar charts, Quail selects and configures the optimal visualization for your data.
+
+### Agentic Hydration Pattern
+
+Quail implements an innovative **Agentic Hydration Pattern** that efficiently generates UI components by separating scaffold generation and data hydration. This architectural pattern improves performance and reliability in LLM-based applications by:
+
+- Generating UI scaffolds independently from data fetching
+- Hydrating components progressively as data becomes available
+- Reducing token usage and API calls
+- Improving response times for complex visualizations
+
+### Enterprise-Grade Security
+
+<Warning>
+  All database credentials are encrypted using AES-256 encryption before storage. Only read-only queries are executed to prevent accidental data modification.
+</Warning>
+
+Security is built into every layer:
+
+- **Encrypted Storage**: Database connection strings are encrypted with a user-provided encryption key
+- **Read-Only Queries**: Only SELECT statements are executed; write operations are blocked
+- **Secure Authentication**: Powered by Supabase with support for multiple authentication methods
+- **Local Credential Storage**: Credentials never leave your infrastructure
+
+## Technology Stack
+
+Quail is built with modern web technologies:
+
+- **Frontend**: Next.js 15.3.0 with React 19
+- **Language**: TypeScript for type safety
+- **UI Components**: Radix UI primitives with Tailwind CSS
+- **Database**: MongoDB for metadata storage
+- **Authentication**: Supabase Auth
+- **AI Models**: Azure OpenAI integration
+- **Charts**: Chart.js and Recharts
+- **Editor**: Monaco Editor for SQL editing
+
+## Use Cases
+
+<CardGroup cols={2}>
+  <Card title="Business Intelligence" icon="chart-mixed">
+    Generate reports and dashboards for stakeholders without writing SQL queries manually.
+  </Card>
+  <Card title="Data Exploration" icon="magnifying-glass">
+    Quickly explore datasets and discover insights through conversational queries.
+  </Card>
+  <Card title="Analytics Prototyping" icon="flask">
+    Rapidly prototype analytics features and test hypotheses with instant visualizations.
+  </Card>
+  <Card title="SQL Learning" icon="graduation-cap">
+    Learn SQL by seeing how natural language questions translate to SQL queries.
+  </Card>
+</CardGroup>
+
+## System Architecture
+
+Quail follows a modern serverless architecture:
+
+1. **Client Layer**: React-based UI with real-time updates
+2. **API Layer**: Next.js API routes for backend logic
+3. **AI Layer**: Azure OpenAI for query generation and chart recommendations
+4. **Data Layer**: Direct database connections with encrypted credentials
+5. **Storage Layer**: MongoDB for user data, dashboards, and chat history
+
+## Getting Help
+
+While Quail is discontinued, you can:
+
+- Review the [source code on GitHub](https://github.com/O1af/quail)
+- Explore the [features](/features) in detail
+- Follow the [quickstart guide](/quickstart) to set up your own instance
+- Study the implementation as a reference for building similar systems
+
+<Info>
+  Quail serves as an excellent reference implementation for developers building AI-powered data analysis tools.
+</Info>
+
+## Next Steps
+
+<Steps>
+  <Step title="Quick Start">
+    Follow the [quickstart guide](/quickstart) to set up Quail locally and connect your first database.
+  </Step>
+  <Step title="Explore Features">
+    Learn about all the [features](/features) that make Quail a powerful BI platform.
+  </Step>
+  <Step title="Review Architecture">
+    Study the codebase to understand the Agentic Hydration Pattern and AI integration patterns.
+  </Step>
+</Steps>

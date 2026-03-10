@@ -1,0 +1,510 @@
+---
+title: "Charts and Visualizations"
+description: "Create, customize, and share data visualizations in Quail"
+---
+
+## Overview
+
+Quail provides powerful charting capabilities that transform your data into clear, actionable visualizations. Whether you're creating a simple bar chart or a complex multi-series visualization, Quail makes it easy to build, customize, and share charts.
+
+## Creating Charts
+
+You can create charts in Quail through multiple methods, depending on your workflow:
+
+<Tabs>
+  <Tab title="From Charts Page">
+    <Steps>
+      <Step title="Navigate to Charts">
+        Click on **Charts** in the main navigation menu.
+      </Step>
+      
+      <Step title="Create New Chart">
+        Click the **Create New Chart** button in the top right.
+      </Step>
+      
+      <Step title="Select Data Source">
+        Choose your database connection and either:
+        - Select an existing table or view
+        - Write a custom SQL query
+      </Step>
+      
+      <Step title="Choose Chart Type">
+        Select the type of chart that best represents your data (bar, line, pie, etc.).
+      </Step>
+      
+      <Step title="Configure Settings">
+        Map your data columns to chart elements:
+        - X-axis and Y-axis
+        - Series grouping
+        - Filters and aggregations
+      </Step>
+      
+      <Step title="Save Your Chart">
+        Give your chart a name and description, then click **Save**.
+      </Step>
+    </Steps>
+  </Tab>
+  
+  <Tab title="From Chat Interface">
+    <Steps>
+      <Step title="Ask a Question">
+        In the [Chat interface](/guide/chat), ask a question that would benefit from visualization:
+        - "Show me monthly sales for the last year"
+        - "What's the distribution of customer ages?"
+        - "Compare revenue by region"
+      </Step>
+      
+      <Step title="Review Generated Chart">
+        Quail automatically generates an appropriate chart based on your question.
+      </Step>
+      
+      <Step title="Refine if Needed">
+        Ask for modifications:
+        - "Make it a line chart instead"
+        - "Show only top 10"
+        - "Add a trend line"
+      </Step>
+      
+      <Step title="Save the Chart">
+        Click **Save Chart** above the visualization.
+      </Step>
+      
+      <Step title="Add Metadata">
+        Enter a name, description, and tags for your chart.
+      </Step>
+      
+      <Step title="Choose Destination">
+        Select to save as a standalone chart or add directly to a dashboard.
+      </Step>
+    </Steps>
+  </Tab>
+  
+  <Tab title="From SQL Editor">
+    <Steps>
+      <Step title="Write Your Query">
+        In the [SQL Editor](/guide/sql-editor), write a query that returns data suitable for visualization.
+      </Step>
+      
+      <Step title="Execute Query">
+        Run your query to see the results.
+      </Step>
+      
+      <Step title="Switch to Visualize">
+        Click the **Visualize** tab in the results panel.
+      </Step>
+      
+      <Step title="Configure Chart">
+        Choose a chart type and configure the visualization settings.
+      </Step>
+      
+      <Step title="Save">
+        Click **Save Chart** to store your visualization.
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+## Chart Types and When to Use Them
+
+Choosing the right chart type is crucial for effectively communicating your data insights.
+
+### Bar Charts
+
+**Best for:**
+- Comparing values across categories
+- Showing rankings
+- Displaying discrete data
+
+**Use cases:**
+- Sales by product category
+- Customer count by region
+- Top 10 products by revenue
+
+**Variants:**
+- **Vertical bars**: Standard comparison
+- **Horizontal bars**: Better for long category names
+- **Stacked bars**: Show composition within categories
+- **Grouped bars**: Compare multiple series side-by-side
+
+<Note>
+  Bar charts work best with 2-15 categories. If you have more, consider filtering to top N or using a different chart type.
+</Note>
+
+### Line Charts
+
+**Best for:**
+- Showing trends over time
+- Continuous data
+- Multiple series comparison
+
+**Use cases:**
+- Daily revenue trends
+- Website traffic over time
+- Year-over-year comparison
+
+**Variants:**
+- **Single line**: One metric over time
+- **Multi-line**: Compare multiple metrics
+- **Area chart**: Emphasize magnitude of change
+- **Stacked area**: Show composition over time
+
+<Note>
+  Line charts are most effective when your x-axis represents time or another continuous variable.
+</Note>
+
+### Pie and Donut Charts
+
+**Best for:**
+- Showing proportions and percentages
+- Part-to-whole relationships
+- Composition of a total
+
+**Use cases:**
+- Market share distribution
+- Revenue breakdown by category
+- Customer segmentation
+
+**Best practices:**
+- Limit to 5-7 slices maximum
+- Start largest slice at 12 o'clock
+- Use a legend for small slices
+- Consider a bar chart if values are similar
+
+<Warning>
+  Pie charts can be difficult to read when slices are similar in size. Consider using a bar chart instead for easier comparison.
+</Warning>
+
+### Scatter Plots
+
+**Best for:**
+- Showing relationships between two variables
+- Identifying correlations
+- Detecting outliers
+
+**Use cases:**
+- Price vs. units sold
+- Customer lifetime value vs. acquisition cost
+- Age vs. purchase frequency
+
+**Features:**
+- Bubble size for third dimension
+- Color for categories
+- Trend lines
+
+### Radar Charts
+
+**Best for:**
+- Comparing multiple variables across categories
+- Showing strengths and weaknesses
+- Multi-dimensional data
+
+**Use cases:**
+- Product feature comparison
+- Performance metrics across teams
+- Customer satisfaction scores
+
+### Polar Area Charts
+
+**Best for:**
+- Cyclical data
+- Comparing categories with circular layout
+- Emphasizing magnitude differences
+
+**Use cases:**
+- Sales by hour of day
+- Activity by day of week
+- Seasonal patterns
+
+## Customizing Your Charts
+
+Quail provides two ways to customize your charts:
+
+### Using the AI Agent
+
+The easiest way to customize charts is by asking the AI agent:
+
+<Steps>
+  <Step title="Select Your Chart">
+    Open the chart you want to customize.
+  </Step>
+  
+  <Step title="Click Edit or Chat">
+    If the chart was created in Chat, continue the conversation. Otherwise, click **Edit with AI**.
+  </Step>
+  
+  <Step title="Request Changes">
+    Tell the agent what you want to change:
+    - "Change the colors to blue and green"
+    - "Make the title bigger"
+    - "Add a subtitle explaining this data"
+    - "Show values on the bars"
+    - "Format the y-axis as currency"
+  </Step>
+  
+  <Step title="Review and Apply">
+    The agent updates the chart. If you like it, click **Save**. If not, ask for more changes.
+  </Step>
+</Steps>
+
+### Manual Editing (Advanced)
+
+For precise control, you can manually edit the chart configuration:
+
+<Steps>
+  <Step title="Save the Chart">
+    Charts must be saved before manual editing is available.
+  </Step>
+  
+  <Step title="Open Chart File">
+    Saved charts are stored as MDX files with React components. You can edit these files directly.
+  </Step>
+  
+  <Step title="Edit JSX Components">
+    Modify the chart components using standard React and charting library syntax.
+  </Step>
+  
+  <Step title="Preview Changes">
+    Your changes are reflected immediately in the chart preview.
+  </Step>
+</Steps>
+
+<Note>
+  Manual editing requires familiarity with React and Quail's charting components. Most users will find the AI agent sufficient for their customization needs.
+</Note>
+
+## Chart Customization Options
+
+Whether using the AI agent or manual editing, you can customize:
+
+### Style and Appearance
+
+<CardGroup cols={2}>
+  <Card title="Colors" icon="palette">
+    - Single color or color scheme
+    - Custom colors for each series
+    - Gradient fills
+    - Conditional colors based on values
+  </Card>
+  
+  <Card title="Typography" icon="text">
+    - Title and subtitle
+    - Font sizes and families
+    - Axis labels
+    - Legend formatting
+  </Card>
+  
+  <Card title="Layout" icon="layout">
+    - Chart dimensions
+    - Padding and margins
+    - Legend position
+    - Grid lines and background
+  </Card>
+  
+  <Card title="Data Labels" icon="tag">
+    - Show/hide values on chart
+    - Number formatting
+    - Label position
+    - Units and prefixes
+  </Card>
+</CardGroup>
+
+### Data Configuration
+
+<CardGroup cols={2}>
+  <Card title="Axes" icon="arrows-up-down">
+    - Scale type (linear, logarithmic)
+    - Min and max values
+    - Axis labels and units
+    - Tick intervals
+  </Card>
+  
+  <Card title="Series" icon="line-chart">
+    - Multiple data series
+    - Series names and colors
+    - Series types (line, bar, area)
+    - Show/hide series
+  </Card>
+  
+  <Card title="Filters" icon="filter">
+    - Date range filters
+    - Category filters
+    - Top N filters
+    - Custom SQL filters
+  </Card>
+  
+  <Card title="Aggregations" icon="calculator">
+    - SUM, AVG, COUNT, MIN, MAX
+    - Group by dimensions
+    - Calculated fields
+    - Running totals
+  </Card>
+</CardGroup>
+
+## Saving and Organizing Charts
+
+### Saving Charts
+
+<Steps>
+  <Step title="Complete Your Chart">
+    Ensure your chart displays the data and styling you want.
+  </Step>
+  
+  <Step title="Click Save">
+    Click the **Save** button in the chart editor.
+  </Step>
+  
+  <Step title="Add Metadata">
+    Provide:
+    - **Name**: Clear, descriptive name
+    - **Description**: What the chart shows and why it's useful
+    - **Tags**: Keywords for organization (e.g., "sales", "monthly", "executive")
+  </Step>
+  
+  <Step title="Confirm">
+    Click **Save Chart** to store it in your charts library.
+  </Step>
+</Steps>
+
+### Organizing Your Charts
+
+Keep your charts organized as your library grows:
+
+- **Use descriptive names**: "Q1 2026 Revenue by Region" is better than "Chart 1"
+- **Add tags**: Tag charts by topic, department, or time period
+- **Create folders**: Group related charts together
+- **Star favorites**: Mark frequently used charts
+- **Archive old charts**: Remove outdated visualizations
+
+## Adding Charts to Dashboards
+
+Charts become even more powerful when combined into dashboards:
+
+<Steps>
+  <Step title="Open Your Chart">
+    Navigate to the chart you want to add to a dashboard.
+  </Step>
+  
+  <Step title="Click Add to Dashboard">
+    Click the **Add to Dashboard** button.
+  </Step>
+  
+  <Step title="Select Dashboard">
+    Choose an existing dashboard or create a new one.
+  </Step>
+  
+  <Step title="Confirm">
+    Click **Add** to place your chart on the dashboard.
+  </Step>
+  
+  <Step title="Arrange on Dashboard">
+    Navigate to the dashboard to arrange and resize your chart as needed.
+  </Step>
+</Steps>
+
+<Note>
+  Charts added to dashboards remain linked to the original. Updates to the chart are reflected across all dashboards using it.
+</Note>
+
+## Sharing Charts
+
+### Share Individual Charts
+
+<Steps>
+  <Step title="Open the Chart">
+    Navigate to the chart you want to share.
+  </Step>
+  
+  <Step title="Click Share">
+    Click the **Share** button in the top right.
+  </Step>
+  
+  <Step title="Configure Access">
+    Choose sharing options:
+    - **Private**: Only you can access
+    - **Link**: Anyone with the link can view
+    - **Specific people**: Invite by email
+  </Step>
+  
+  <Step title="Set Permissions">
+    Choose permission level:
+    - **View**: Can see the chart and refresh data
+    - **Edit**: Can modify chart settings
+  </Step>
+  
+  <Step title="Copy Link">
+    Copy the share link and send it to your recipients.
+  </Step>
+</Steps>
+
+### Export Options
+
+<CardGroup cols={2}>
+  <Card title="PNG Image" icon="image">
+    Download chart as a high-resolution PNG for presentations and reports.
+  </Card>
+  
+  <Card title="SVG Vector" icon="vector">
+    Export as SVG for editing in design tools or printing.
+  </Card>
+  
+  <Card title="CSV Data" icon="file-csv">
+    Export the underlying data as CSV for use in spreadsheets.
+  </Card>
+  
+  <Card title="Embed Code" icon="code">
+    Get embed code to display the chart on external websites.
+  </Card>
+</CardGroup>
+
+## Best Practices
+
+### Design Principles
+
+1. **Simplicity**: Remove unnecessary elements that don't add to understanding
+2. **Clarity**: Use clear titles, labels, and legends
+3. **Consistency**: Use the same colors and styles across related charts
+4. **Accessibility**: Ensure colors are distinguishable and text is readable
+
+### Data Accuracy
+
+1. **Verify queries**: Always check that your query returns the correct data
+2. **Update frequency**: Note when data was last refreshed
+3. **Handle nulls**: Decide how to display missing or null values
+4. **Check aggregations**: Ensure SUM, AVG, etc. are calculated correctly
+
+### Performance
+
+1. **Limit data points**: Charts with thousands of points may render slowly
+2. **Use aggregation**: Aggregate data at the database level when possible
+3. **Add filters**: Allow users to filter data for faster rendering
+4. **Cache results**: Enable caching for frequently viewed charts
+
+### Naming and Documentation
+
+1. **Descriptive titles**: Clearly state what the chart shows
+2. **Add context**: Include time periods, filters, or other relevant details
+3. **Document calculations**: Explain any custom calculations or metrics
+4. **Include sources**: Note which tables and databases are used
+
+## Troubleshooting
+
+### Chart Not Displaying Data
+
+- Verify your query returns results in the SQL Editor
+- Check that columns are mapped correctly to chart axes
+- Ensure date formats are recognized properly
+- Look for null values that might be filtered out
+
+### Chart Looks Wrong
+
+- Try a different chart type that better fits your data
+- Check axis scales (linear vs. logarithmic)
+- Verify data aggregation is correct
+- Review filter settings
+
+### Performance Issues
+
+- Reduce the number of data points
+- Add filters to limit results
+- Use server-side aggregation
+- Consider caching for frequently accessed charts

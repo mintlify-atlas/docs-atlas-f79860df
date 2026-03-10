@@ -1,0 +1,577 @@
+---
+title: Security Best Practices
+description: Essential security guidelines for deploying and operating Quail BI
+---
+
+## Security Overview
+
+Quail implements multiple layers of security to protect your data and database credentials. This guide covers essential security practices for production deployments.
+
+<CardGroup cols={2}>
+  <Card title="Encryption" icon="shield-halved">
+    All database credentials encrypted at rest using AES-256-GCM
+  </Card>
+  <Card title="Read-Only Access" icon="eye">
+    Queries execute with read-only permissions to prevent data modification
+  </Card>
+  <Card title="Authentication" icon="user-lock">
+    Supabase-powered authentication with JWT tokens
+  </Card>
+  <Card title="Network Security" icon="network-wired">
+    IP whitelisting and SSL/TLS encryption for database connections
+  </Card>
+</CardGroup>
+
+## Encryption Keys
+
+### Generating a Secure Encryption Key
+
+Quail uses AES-256-GCM encryption to protect database connection strings and credentials stored in browser localStorage. The encryption key is **critical** for security.
+
+<Warning>
+  The `NEXT_PUBLIC_ENCRYPTION_KEY` is the most sensitive configuration value. If compromised, attackers can decrypt all stored database credentials.
+</Warning>
+
+**Generate a cryptographically secure key:**
+
+```bash
+openssl rand -base64 32
+```
+
+This produces a 256-bit key encoded in base64 (exactly 32 characters).
+
+### Key Management Best Practices
+
+<Steps>
+  <Step>
+    **Generate Once:** Create the encryption key before initial deployment and never change it
+  </Step>
+  <Step>
+    **Secure Storage:** Store the key in a secrets manager (AWS Secrets Manager, HashiCorp Vault, Azure Key Vault)
+  </Step>
+  <Step>
+    **Access Control:** Limit who can view the encryption key to essential personnel only
+  </Step>
+  <Step>
+    **No Version Control:** Never commit `.env.local` or encryption keys to Git repositories
+  </Step>
+  <Step>
+    **Environment Isolation:** Use different keys for development, staging, and production
+  </Step>
+</Steps>
+
+<Note>
+  **Why NEXT_PUBLIC prefix?** The encryption key must be available in the browser to decrypt connection strings on the client side. While this seems counterintuitive, the security model assumes the browser environment is trusted for the authenticated user. The key is still not exposed in the codebase or version control.
+</Note>
+
+### Encryption Implementation
+
+Quail's encryption system (~/workspace/source/components/stores/utils/encrypted_store.ts) uses:
+
+- **Algorithm:** AES-256-GCM (Galois/Counter Mode)
+- **Key Size:** 256 bits (32 bytes)
+- **IV:** Randomly generated 12-byte initialization vector per encryption
+- **Authentication:** GCM mode provides authenticated encryption (prevents tampering)
+
+```typescript
+// Encryption happens automatically for database connections
+const ALGORITHM = "aes-256-gcm";
+
+// Each encrypted value includes:
+// [12-byte IV][16-byte auth tag][encrypted data]
+```
+
+### Key Rotation
+
+<Warning>
+  **Changing the encryption key will make all existing encrypted data unrecoverable.** Key rotation requires careful planning.
+</Warning>
+
+If you must rotate the encryption key:
+
+<Steps>
+  <Step>
+    **Notify Users:** Inform users they'll need to re-enter database connections
+  </Step>
+  <Step>
+    **Schedule Maintenance:** Plan rotation during low-traffic periods
+  </Step>
+  <Step>
+    **Update Key:** Change `NEXT_PUBLIC_ENCRYPTION_KEY` in all environments
+  </Step>
+  <Step>
+    **Clear Storage:** Users must clear browser localStorage or re-add connections
+  </Step>
+  <Step>
+    **Verify:** Test that new connections can be saved and retrieved
+  </Step>
+</Steps>
+
+## Database Credential Security
+
+### Connection String Storage
+
+Database connection strings contain sensitive credentials. Quail stores them securely:
+
+1. **Client-side encryption:** Connection strings encrypted in browser before localStorage storage (~/workspace/source/components/stores/utils/encrypted_store.ts)
+2. **Server-side handling:** Connection strings transmitted over HTTPS to Azure Functions for query execution
+3. **No persistent server storage:** Credentials never stored on application servers or in logs
+
+<Note>
+  Connection strings are stored encrypted in the user's browser localStorage. This means:
+  - Credentials don't leave the user's device except during query execution
+  - Each user's database access is isolated
+  - Clearing browser data removes all saved connections
+</Note>
+
+### Creating Read-Only Database Users
+
+<Warning>
+  **Never use admin or write-access credentials with Quail.** Always create dedicated read-only users for BI tools.
+</Warning>
+
+#### PostgreSQL Read-Only User
+
+```sql
+-- Create dedicated user
+CREATE USER quail_readonly WITH PASSWORD 'your-secure-password';
+
+-- Grant connection and schema access
+GRANT CONNECT ON DATABASE your_database TO quail_readonly;
+GRANT USAGE ON SCHEMA public TO quail_readonly;
+
+-- Grant SELECT on all existing tables
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO quail_readonly;
+
+-- Ensure future tables are also readable (optional)
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+  GRANT SELECT ON TABLES TO quail_readonly;
+
+-- Grant access to information_schema (required for schema introspection)
+GRANT SELECT ON ALL TABLES IN SCHEMA information_schema TO quail_readonly;
+```
+
+#### MySQL Read-Only User
+
+```sql
+-- Create dedicated user
+CREATE USER 'quail_readonly'@'%' IDENTIFIED BY 'your-secure-password';
+
+-- Grant SELECT privileges
+GRANT SELECT ON your_database.* TO 'quail_readonly'@'%';
+
+-- Apply changes
+FLUSH PRIVILEGES;
+
+-- Verify permissions
+SHOW GRANTS FOR 'quail_readonly'@'%';
+```
+
+#### SQL Server Read-Only User
+
+```sql
+-- Create login
+CREATE LOGIN quail_readonly WITH PASSWORD = 'your-secure-password';
+
+-- Create user in database
+USE your_database;
+CREATE USER quail_readonly FOR LOGIN quail_readonly;
+
+-- Add to db_datareader role (read-only)
+ALTER ROLE db_datareader ADD MEMBER quail_readonly;
+```
+
+### Password Requirements
+
+For database user passwords:
+
+- Minimum 16 characters
+- Mix of uppercase, lowercase, numbers, and symbols
+- Generate using password manager or: `openssl rand -base64 24`
+- Rotate passwords quarterly
+- Never reuse passwords across environments
+
+### Special Characters in Connection Strings
+
+If passwords contain special characters, URL-encode them:
+
+```bash
+# Original password: P@ssw0rd!#
+# URL encoded: P%40ssw0rd%21%23
+
+postgresql://user:P%40ssw0rd%21%23@host:5432/database
+```
+
+Common encodings:
+- `@` → `%40`
+- `#` → `%23`
+- `!` → `%21`
+- `:` → `%3A`
+- `/` → `%2F`
+
+## Environment Variable Security
+
+### Required Environment Variables
+
+```bash
+# .env.local (NEVER commit this file)
+
+# Encryption (32 characters, base64 encoded)
+NEXT_PUBLIC_ENCRYPTION_KEY="your-32-char-key-here"
+
+# Supabase Authentication
+NEXT_PUBLIC_SUPABASE_URL="https://your-project.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="your-anon-key"
+SUPABASE_SERVICE_ROLE_KEY="your-service-role-key"  # Most sensitive!
+
+# MongoDB (stores user metadata, NOT database credentials)
+MONGODB_URI="mongodb+srv://user:pass@cluster.mongodb.net/quail"
+
+# Optional: Default demo database
+NEXT_PUBLIC_DEFAULT_DB_CONNECTION_STRING="postgresql://demo:demo@demo-db:5432/demo"
+```
+
+### Securing Environment Variables
+
+<Tabs>
+  <Tab title="Vercel">
+    1. Go to Project Settings > Environment Variables
+    2. Add variables individually (don't import .env files)
+    3. Mark sensitive keys as "Encrypted" in UI
+    4. Use Preview/Production environments appropriately
+    5. Enable "Sensitive" flag for:
+       - `SUPABASE_SERVICE_ROLE_KEY`
+       - `MONGODB_URI`
+       - `NEXT_PUBLIC_ENCRYPTION_KEY`
+  </Tab>
+  <Tab title="Docker / Kubernetes">
+    **Use Secrets, Not Environment Variables:**
+    
+    ```yaml
+    # kubernetes-secret.yaml
+    apiVersion: v1
+    kind: Secret
+    metadata:
+      name: quail-secrets
+    type: Opaque
+    stringData:
+      encryption-key: "your-key"
+      supabase-service-key: "your-key"
+      mongodb-uri: "mongodb+srv://..."
+    ```
+    
+    ```yaml
+    # deployment.yaml
+    env:
+      - name: NEXT_PUBLIC_ENCRYPTION_KEY
+        valueFrom:
+          secretKeyRef:
+            name: quail-secrets
+            key: encryption-key
+    ```
+  </Tab>
+  <Tab title="AWS / Azure / GCP">
+    **Use Native Secrets Managers:**
+    
+    - **AWS:** Use AWS Secrets Manager or SSM Parameter Store
+    - **Azure:** Use Azure Key Vault
+    - **GCP:** Use Secret Manager
+    
+    Example with AWS:
+    ```bash
+    # Store secret
+    aws secretsmanager create-secret \
+      --name quail/encryption-key \
+      --secret-string "your-key"
+    
+    # Retrieve in application
+    aws secretsmanager get-secret-value \
+      --secret-id quail/encryption-key \
+      --query SecretString --output text
+    ```
+  </Tab>
+</Tabs>
+
+### What NOT to Do
+
+<Warning>
+  **Never:**
+  - Commit `.env.local`, `.env.production`, or any file with real credentials to Git
+  - Store secrets in plain text in wikis, documentation, or chat
+  - Email credentials
+  - Hard-code credentials in source code
+  - Use the same credentials across development, staging, and production
+  - Store production credentials on developer machines
+</Warning>
+
+## Network Security
+
+### IP Whitelisting
+
+Most production databases require IP whitelisting. This prevents unauthorized access even if credentials are compromised.
+
+<Steps>
+  <Step>
+    **Identify Outbound IP:** Determine your Quail deployment's outbound IP address
+    ```bash
+    # From within your deployment
+    curl ifconfig.me
+    ```
+  </Step>
+  <Step>
+    **Whitelist in Database Provider:**
+    - AWS RDS: Security Groups > Inbound Rules
+    - Azure SQL: Networking > Firewall Rules
+    - GCP Cloud SQL: Connections > Authorized Networks
+    - MongoDB Atlas: Network Access > IP Access List
+  </Step>
+  <Step>
+    **Use Specific IPs:** Avoid whitelisting `0.0.0.0/0` (allows all IPs)
+  </Step>
+  <Step>
+    **Document IPs:** Keep a record of whitelisted IPs for each environment
+  </Step>
+</Steps>
+
+<Note>
+  For dynamic deployment platforms (e.g., serverless), you may need to whitelist a range of IPs or use a NAT gateway with a static IP.
+</Note>
+
+### SSL/TLS for Database Connections
+
+**Always enable SSL/TLS for database connections in production:**
+
+```bash
+# PostgreSQL
+postgresql://user:pass@host:5432/db?sslmode=require
+
+# MySQL
+mysql://user:pass@host:3306/db?ssl=true
+
+# MongoDB
+mongodb+srv://user:pass@cluster.mongodb.net/db  # (SSL enabled by default)
+```
+
+**SSL Modes (PostgreSQL):**
+- `disable` - No SSL (never use in production)
+- `require` - SSL required, no certificate verification
+- `verify-ca` - SSL + verify certificate authority
+- `verify-full` - SSL + verify hostname matches certificate
+
+<Warning>
+  Use at minimum `sslmode=require` for production databases. For highly sensitive data, use `verify-full` with proper certificate management.
+</Warning>
+
+## Authentication Security
+
+### Supabase Configuration
+
+Quail uses Supabase for user authentication and authorization. Secure your Supabase project:
+
+<Steps>
+  <Step>
+    **Enable RLS (Row Level Security):** Ensure all Supabase tables have RLS policies
+  </Step>
+  <Step>
+    **Configure Auth Settings:**
+    - Set appropriate JWT expiration (default: 1 hour)
+    - Enable email confirmation for new users
+    - Configure password requirements (min length, complexity)
+  </Step>
+  <Step>
+    **Secure API Keys:**
+    - Use `anon` key for client-side (limited access)
+    - Protect `service_role` key (full database access)
+    - Rotate keys if compromised
+  </Step>
+  <Step>
+    **URL Configuration:**
+    - Add production URL to Supabase "Site URL"
+    - Add auth callback URLs: `https://your-app.com/auth/callback`
+  </Step>
+</Steps>
+
+### Session Management
+
+The middleware (~/workspace/source/middleware.ts) handles session validation on every request:
+
+- JWT tokens validated on each request
+- Expired sessions automatically redirect to login
+- Cookies secured with `httpOnly`, `secure`, and `sameSite` flags
+
+## Query Security
+
+### Read-Only Enforcement
+
+<Note>
+  Quail enforces read-only access by design:
+  - Database users should only have `SELECT` privileges
+  - Query execution happens on Azure Functions with tier-based rate limiting (~/workspace/source/utils/actions/runSQL.ts)
+  - No write operations (INSERT, UPDATE, DELETE, DROP) should be permitted
+</Note>
+
+**Defense in Depth:**
+
+1. **Database-level:** Use read-only user permissions
+2. **Network-level:** Firewall rules allowing only SELECT queries
+3. **Application-level:** UI doesn't provide write interfaces
+4. **Monitoring:** Log all queries for audit trails
+
+### SQL Injection Prevention
+
+While Quail uses AI to generate SQL queries, security measures are in place:
+
+- Parameterized queries where possible
+- Input validation on connection strings
+- Query execution through trusted Azure Function endpoint
+- User database credentials never exposed to other users
+
+<Warning>
+  **For self-hosted deployments:** If you modify query execution logic, always use parameterized queries and never concatenate user input directly into SQL strings.
+</Warning>
+
+## Monitoring & Auditing
+
+### Security Monitoring
+
+Implement monitoring for security events:
+
+```javascript
+// Log authentication events
+- Login attempts (successful/failed)
+- Password reset requests
+- Session expirations
+
+// Log database access
+- Connection attempts
+- Query execution (without exposing data)
+- Failed authentication to databases
+
+// Monitor for anomalies
+- Unusual query patterns
+- High volume of requests from single user
+- Failed login spikes
+```
+
+### Audit Logs
+
+Enable audit logging in your infrastructure:
+
+- **Application logs:** Next.js application logs (stdout/stderr)
+- **Database logs:** Query logs in your database (enabled separately)
+- **Supabase logs:** Auth events and API requests
+- **MongoDB logs:** User metadata changes
+
+### Compliance Considerations
+
+For regulated industries (HIPAA, SOC 2, GDPR):
+
+- **Data encryption:** At rest (database) and in transit (SSL/TLS)
+- **Access controls:** Role-based access, read-only database users
+- **Audit trails:** Log all data access and authentication events
+- **Data residency:** Choose database regions that comply with requirements
+- **User consent:** Implement consent flows for data collection
+- **Data retention:** Configure automatic data deletion policies
+
+## Incident Response
+
+### If Encryption Key is Compromised
+
+<Steps>
+  <Step>
+    **Immediate:** Rotate the encryption key (see [Key Rotation](#key-rotation))
+  </Step>
+  <Step>
+    **Notify users:** All saved connections must be re-entered
+  </Step>
+  <Step>
+    **Rotate database passwords:** Change passwords for all database users
+  </Step>
+  <Step>
+    **Audit access:** Review logs for unauthorized database access
+  </Step>
+  <Step>
+    **Post-mortem:** Document incident and improve key security procedures
+  </Step>
+</Steps>
+
+### If Database Credentials are Leaked
+
+<Steps>
+  <Step>
+    **Revoke access:** Immediately disable the compromised database user
+  </Step>
+  <Step>
+    **Create new user:** Generate new read-only user with different password
+  </Step>
+  <Step>
+    **Update connections:** Users must update to new connection string
+  </Step>
+  <Step>
+    **Review logs:** Check database logs for unauthorized queries
+  </Step>
+  <Step>
+    **Assess impact:** Determine if sensitive data was accessed
+  </Step>
+</Steps>
+
+### If Supabase Keys are Compromised
+
+<Steps>
+  <Step>
+    **Rotate keys:** Generate new API keys in Supabase dashboard
+  </Step>
+  <Step>
+    **Update environment:** Deploy with new keys
+  </Step>
+  <Step>
+    **Invalidate sessions:** Force all users to re-authenticate
+  </Step>
+  <Step>
+    **Review activity:** Check Supabase logs for suspicious activity
+  </Step>
+</Steps>
+
+## Security Checklist
+
+Before deploying to production:
+
+<Steps>
+  <Step>
+    ☐ Generate strong encryption key with `openssl rand -base64 32`
+  </Step>
+  <Step>
+    ☐ Store all secrets in secrets manager (not plain text environment variables)
+  </Step>
+  <Step>
+    ☐ Create read-only database users (never use admin credentials)
+  </Step>
+  <Step>
+    ☐ Enable SSL/TLS for all database connections (`sslmode=require`)
+  </Step>
+  <Step>
+    ☐ Whitelist only necessary IPs in database firewall rules
+  </Step>
+  <Step>
+    ☐ Configure Supabase auth URLs and enable RLS
+  </Step>
+  <Step>
+    ☐ Verify `.env.local` and other secret files are in `.gitignore`
+  </Step>
+  <Step>
+    ☐ Test authentication flow in production environment
+  </Step>
+  <Step>
+    ☐ Enable monitoring and audit logging
+  </Step>
+  <Step>
+    ☐ Document incident response procedures
+  </Step>
+  <Step>
+    ☐ Schedule regular security reviews and key rotation
+  </Step>
+</Steps>
+
+<Warning>
+  **Security is an ongoing process.** Regularly review access logs, rotate credentials, apply security updates, and stay informed about vulnerabilities in dependencies.
+</Warning>

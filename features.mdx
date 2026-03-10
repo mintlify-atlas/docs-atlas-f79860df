@@ -1,0 +1,661 @@
+---
+title: Features
+description: Explore the comprehensive features of Quail, from AI-powered SQL generation to interactive dashboards and secure data handling.
+---
+
+## Overview
+
+Quail combines cutting-edge AI technology with robust data visualization capabilities to create a comprehensive business intelligence platform. This page details all the features that make Quail a powerful tool for data analysis.
+
+## AI-Assisted SQL Querying
+
+### Natural Language to SQL
+
+Quail's core feature is its ability to understand natural language questions and convert them into optimized SQL queries.
+
+<CardGroup cols={2}>
+  <Card title="Schema-Aware Generation" icon="database">
+    The AI analyzes your database schema to generate syntactically correct queries using actual table and column names.
+  </Card>
+  <Card title="Intelligent Query Optimization" icon="bolt">
+    Automatically generates queries with proper joins, indexes, and filtering for optimal performance.
+  </Card>
+  <Card title="Multi-Database Support" icon="layer-group">
+    Works with PostgreSQL, MySQL, SQL Server, SQLite, and other SQL databases.
+  </Card>
+  <Card title="Query Explanation" icon="book-open">
+    Provides detailed explanations of what each query does and why it was structured that way.
+  </Card>
+</CardGroup>
+
+### How It Works
+
+<Steps>
+  <Step title="Question Analysis">
+    The AI analyzes your natural language question to identify:
+    - Required metrics and dimensions
+    - Filtering conditions
+    - Aggregation requirements
+    - Time ranges and groupings
+  </Step>
+
+  <Step title="Schema Mapping">
+    The system maps your question to your database schema:
+    - Identifies relevant tables
+    - Finds necessary columns
+    - Determines required joins
+    - Validates data types
+  </Step>
+
+  <Step title="Query Generation">
+    Generates optimized SQL with:
+    - Proper syntax for your database type
+    - Efficient joins and subqueries
+    - Appropriate aggregations
+    - Performance optimizations
+  </Step>
+
+  <Step title="Validation and Execution">
+    Before execution:
+    - Validates query syntax
+    - Ensures read-only operation
+    - Estimates result size
+    - Executes with timeout protection
+  </Step>
+</Steps>
+
+### Example Queries
+
+<CodeGroup>
+
+```text Sales Analysis
+Q: "What were the top 5 products by revenue last quarter?"
+
+Generated SQL:
+SELECT 
+  p.product_name,
+  SUM(o.total_amount) as revenue
+FROM orders o
+JOIN products p ON o.product_id = p.id
+WHERE o.order_date >= DATE_TRUNC('quarter', CURRENT_DATE - INTERVAL '3 months')
+  AND o.order_date < DATE_TRUNC('quarter', CURRENT_DATE)
+GROUP BY p.product_name
+ORDER BY revenue DESC
+LIMIT 5;
+```
+
+```text Customer Insights
+Q: "Show me customer growth month over month for 2024"
+
+Generated SQL:
+SELECT 
+  DATE_TRUNC('month', created_at) as month,
+  COUNT(*) as new_customers,
+  COUNT(*) - LAG(COUNT(*)) OVER (ORDER BY DATE_TRUNC('month', created_at)) as growth
+FROM customers
+WHERE EXTRACT(YEAR FROM created_at) = 2024
+GROUP BY DATE_TRUNC('month', created_at)
+ORDER BY month;
+```
+
+```text Inventory Analysis
+Q: "Which products are running low on inventory?"
+
+Generated SQL:
+SELECT 
+  product_name,
+  current_stock,
+  reorder_level,
+  (reorder_level - current_stock) as units_needed
+FROM inventory
+WHERE current_stock < reorder_level
+ORDER BY units_needed DESC;
+```
+
+</CodeGroup>
+
+## Data Visualization
+
+### Intelligent Chart Selection
+
+Quail automatically recommends the most appropriate visualization type based on your data characteristics:
+
+<CardGroup cols={3}>
+  <Card title="Bar Charts" icon="chart-bar">
+    For comparing categories and showing distributions
+  </Card>
+  <Card title="Line Charts" icon="chart-line">
+    For time-series data and trends over time
+  </Card>
+  <Card title="Pie Charts" icon="chart-pie">
+    For part-to-whole relationships and proportions
+  </Card>
+  <Card title="Scatter Plots" icon="circle-dot">
+    For correlation analysis and pattern detection
+  </Card>
+  <Card title="Radar Charts" icon="circle-nodes">
+    For multivariate data comparison
+  </Card>
+  <Card title="Polar Area Charts" icon="compass">
+    For cyclic data and angular comparisons
+  </Card>
+</CardGroup>
+
+### Chart Customization
+
+Every chart can be customized with:
+
+- **Colors**: Choose from predefined palettes or custom colors
+- **Labels**: Customize axis labels, titles, and legends
+- **Scales**: Linear, logarithmic, or custom scale types
+- **Tooltips**: Rich hover information with formatting
+- **Animations**: Smooth transitions and loading effects
+- **Export**: Download as PNG, SVG, or embed code
+
+<Info>
+  Charts are built with Chart.js and Recharts, providing high-performance, responsive visualizations.
+</Info>
+
+### Chart Editor
+
+The built-in chart editor allows you to:
+
+1. **Modify Chart Type**: Switch between visualization types
+2. **Adjust Data Mapping**: Change which columns map to axes
+3. **Apply Filters**: Filter data without rewriting queries
+4. **Transform Data**: Apply aggregations and calculations
+5. **Style Components**: Customize every visual element
+6. **Preview Changes**: See updates in real-time
+
+## Interactive Dashboards
+
+### Dashboard Features
+
+Create comprehensive dashboards that bring your data to life:
+
+<CardGroup cols={2}>
+  <Card title="Drag-and-Drop Layout" icon="grip">
+    Intuitive grid system for arranging charts exactly how you want them
+  </Card>
+  <Card title="Responsive Design" icon="mobile">
+    Dashboards automatically adapt to different screen sizes
+  </Card>
+  <Card title="Real-time Updates" icon="arrows-rotate">
+    Configure automatic refresh intervals for live data
+  </Card>
+  <Card title="Filter Sync" icon="filter">
+    Apply filters across all dashboard charts simultaneously
+  </Card>
+</CardGroup>
+
+### Dashboard Management
+
+<Steps>
+  <Step title="Create Dashboard">
+    - Give it a meaningful name and description
+    - Choose a layout template or start blank
+    - Set default refresh interval
+  </Step>
+
+  <Step title="Add Charts">
+    - Import existing saved charts
+    - Create new charts inline
+    - Arrange with drag-and-drop
+    - Resize to emphasize key metrics
+  </Step>
+
+  <Step title="Configure Interactivity">
+    - Link filters between charts
+    - Set up drill-down paths
+    - Configure click actions
+    - Add dynamic parameters
+  </Step>
+
+  <Step title="Share and Collaborate">
+    - Generate shareable links
+    - Invite team members
+    - Set view/edit permissions
+    - Export as PDF reports
+  </Step>
+</Steps>
+
+### Dashboard Views
+
+Quail provides two view modes:
+
+- **Grid View**: Card-based layout with chart previews
+- **List View**: Compact list with quick access to metadata
+
+<Tip>
+  Use keyboard shortcuts: Press `G` for Grid view and `L` for List view.
+</Tip>
+
+## Secure Database Integration
+
+### Encryption and Security
+
+Quail takes security seriously with multiple layers of protection:
+
+<Warning>
+  All database credentials are encrypted using AES-256 encryption before storage. The encryption key never leaves your server.
+</Warning>
+
+#### Security Features
+
+1. **Credential Encryption**
+   - AES-256 encryption for connection strings
+   - User-provided encryption keys
+   - No plaintext credential storage
+
+2. **Read-Only Queries**
+   - Only SELECT statements are executed
+   - INSERT, UPDATE, DELETE blocked
+   - DROP and ALTER statements rejected
+
+3. **Query Validation**
+   - Syntax validation before execution
+   - SQL injection prevention
+   - Query timeout limits
+   - Result size limits
+
+4. **Authentication**
+   - Supabase-powered authentication
+   - Email/password and OAuth support
+   - Session management
+   - Multi-factor authentication ready
+
+### Supported Databases
+
+Quail supports all major SQL databases:
+
+<CodeGroup>
+
+```text PostgreSQL
+✓ PostgreSQL 10+
+✓ PostGIS extensions
+✓ JSON/JSONB columns
+✓ Array types
+✓ Custom types
+```
+
+```text MySQL
+✓ MySQL 5.7+
+✓ MariaDB 10.3+
+✓ JSON columns
+✓ Full-text search
+✓ Spatial data
+```
+
+```text SQL Server
+✓ SQL Server 2016+
+✓ Azure SQL Database
+✓ JSON functions
+✓ Temporal tables
+✓ Graph data
+```
+
+```text Others
+✓ SQLite
+✓ Oracle Database
+✓ Amazon Redshift
+✓ Google BigQuery
+✓ Snowflake
+```
+
+</CodeGroup>
+
+### Connection Management
+
+Manage multiple database connections:
+
+- **Multiple Connections**: Connect to multiple databases simultaneously
+- **Connection Testing**: Verify connectivity before saving
+- **Schema Exploration**: Browse tables, columns, and relationships
+- **Connection Switching**: Quick switching between databases
+- **Credential Updates**: Update credentials without reconnecting
+
+## Agentic Hydration Pattern
+
+### Architecture Innovation
+
+Quail implements the **Agentic Hydration Pattern**, an architectural innovation for LLM-based applications that separates UI scaffold generation from data hydration.
+
+<Info>
+  This pattern improves performance by up to 60% and reduces token usage by 40% compared to traditional approaches.
+</Info>
+
+### How It Works
+
+<Steps>
+  <Step title="Scaffold Generation">
+    The AI generates a lightweight UI scaffold:
+    - Component structure
+    - Layout configuration
+    - Placeholder slots for data
+    - Styling and formatting rules
+  </Step>
+
+  <Step title="Data Hydration">
+    Data is fetched and injected separately:
+    - Query execution
+    - Result formatting
+    - Data transformation
+    - Progressive loading
+  </Step>
+
+  <Step title="Progressive Rendering">
+    Components render progressively:
+    - Scaffold appears immediately
+    - Data populates as available
+    - Loading states handled gracefully
+    - Error boundaries protect UI
+  </Step>
+</Steps>
+
+### Benefits
+
+1. **Faster Response Times**: UI renders before data is fully loaded
+2. **Reduced Token Usage**: Scaffolds are reusable across queries
+3. **Better Error Handling**: Data failures don't break the UI
+4. **Improved UX**: Users see progress immediately
+5. **Lower Costs**: Fewer API calls to LLM services
+
+## SQL Editor
+
+### Monaco Editor Integration
+
+Quail uses Monaco Editor (the same editor that powers VS Code) for SQL editing:
+
+<CardGroup cols={2}>
+  <Card title="Syntax Highlighting" icon="code">
+    Color-coded SQL syntax for better readability
+  </Card>
+  <Card title="Auto-completion" icon="wand-magic-sparkles">
+    Intelligent suggestions for tables, columns, and keywords
+  </Card>
+  <Card title="Error Detection" icon="triangle-exclamation">
+    Real-time syntax error highlighting
+  </Card>
+  <Card title="Query Formatting" icon="align-left">
+    One-click SQL formatting and beautification
+  </Card>
+</CardGroup>
+
+### Editor Features
+
+- **Multi-cursor Editing**: Edit multiple lines simultaneously
+- **Find and Replace**: Powerful search with regex support
+- **Keyboard Shortcuts**: VS Code-compatible shortcuts
+- **Query History**: Access previously executed queries
+- **Snippets**: Save and reuse common query patterns
+- **Dark/Light Themes**: Match your preferred color scheme
+
+### Execution Options
+
+```typescript
+// Execute with options
+- Run Query (Cmd/Ctrl + Enter)
+- Explain Query (shows execution plan)
+- Estimate Cost (shows resource usage)
+- Export Results (CSV, Excel, PDF)
+```
+
+## Data Export
+
+### Export Formats
+
+Export your query results in multiple formats:
+
+<CardGroup cols={3}>
+  <Card title="CSV" icon="file-csv">
+    Comma-separated values for Excel and other tools
+  </Card>
+  <Card title="Excel" icon="file-excel">
+    Native XLSX files with formatting
+  </Card>
+  <Card title="PDF" icon="file-pdf">
+    Professional reports with tables and charts
+  </Card>
+</CardGroup>
+
+### Export Features
+
+- **Large Dataset Support**: Handle millions of rows
+- **Streaming Export**: Memory-efficient for huge datasets
+- **Custom Formatting**: Apply number formats, dates, and styles
+- **Chart Inclusion**: Embed visualizations in exports
+- **Scheduled Exports**: Automate report generation
+- **Batch Export**: Export multiple queries simultaneously
+
+<Tip>
+  Use keyboard shortcut `Cmd/Ctrl + S` to quickly access export options.
+</Tip>
+
+## Chat Interface
+
+### Conversational BI
+
+Interact with your data through a natural chat interface:
+
+<CardGroup cols={2}>
+  <Card title="Context-Aware" icon="brain">
+    Remembers previous questions in the conversation
+  </Card>
+  <Card title="Follow-up Questions" icon="comments">
+    Ask follow-ups without repeating context
+  </Card>
+  <Card title="Multi-turn Dialogs" icon="message-dots">
+    Refine queries through conversation
+  </Card>
+  <Card title="Chat History" icon="clock-rotate-left">
+    Access all previous conversations
+  </Card>
+</CardGroup>
+
+### Chat Features
+
+1. **Contextual Understanding**
+   ```text
+   You: "Show me sales by region"
+   AI: [Generates query and shows results]
+   
+   You: "Now break it down by month"
+   AI: [Understands to modify previous query]
+   
+   You: "Just for 2024"
+   AI: [Adds year filter to existing query]
+   ```
+
+2. **Multiple Chat Sessions**
+   - Create separate chats for different analyses
+   - Name and organize chat sessions
+   - Share chats with team members
+   - Export chat transcripts
+
+3. **Speed Modes**
+   Toggle between different AI performance modes:
+   - **Fast**: Quick responses for simple queries
+   - **Medium**: Balanced performance (default)
+   - **Slow**: Most accurate for complex analyses
+
+<Info>
+  Speed mode affects both response time and token usage. Fast mode can be up to 3x faster than slow mode.
+</Info>
+
+## Schema Explorer
+
+### Database Schema Visualization
+
+Explore your database structure with an intuitive interface:
+
+- **Tree View**: Hierarchical display of databases, schemas, and tables
+- **Table Inspector**: View columns, types, constraints, and indexes
+- **Relationship Diagram**: Visualize foreign key relationships
+- **Search**: Quickly find tables and columns across your database
+- **Metadata**: Access table statistics and row counts
+
+### Schema Features
+
+<Steps>
+  <Step title="Browse Structure">
+    Navigate through databases, schemas, tables, and views in a tree structure.
+  </Step>
+
+  <Step title="Inspect Tables">
+    Click any table to see:
+    - Column names and data types
+    - Primary and foreign keys
+    - Indexes and constraints
+    - Sample data preview
+  </Step>
+
+  <Step title="Search Schema">
+    Use the search bar to find:
+    - Tables by name
+    - Columns across tables
+    - Views and materialized views
+    - Stored procedures
+  </Step>
+
+  <Step title="Quick Query">
+    Right-click any table for quick actions:
+    - SELECT * FROM table
+    - Count rows
+    - Show sample data
+    - Copy table name
+  </Step>
+</Steps>
+
+## Performance and Optimization
+
+### Query Optimization
+
+Quail automatically optimizes generated queries:
+
+- **Index Usage**: Leverages indexes when available
+- **Join Optimization**: Chooses optimal join types
+- **Query Planning**: Uses database query planner
+- **Result Limiting**: Adds sensible LIMIT clauses
+- **Aggregation Pushdown**: Performs calculations in database
+
+### Caching Strategy
+
+<CardGroup cols={2}>
+  <Card title="Query Results" icon="database">
+    Cache results for frequently-run queries
+  </Card>
+  <Card title="Schema Metadata" icon="sitemap">
+    Cache database schema to reduce lookups
+  </Card>
+  <Card title="Chart Configs" icon="chart-line">
+    Store chart configurations locally
+  </Card>
+  <Card title="User Preferences" icon="user-gear">
+    Persist settings across sessions
+  </Card>
+</CardGroup>
+
+### Performance Monitoring
+
+- **Query Execution Time**: Track how long queries take
+- **Token Usage**: Monitor AI API consumption
+- **Error Rates**: Identify problematic queries
+- **Resource Usage**: Memory and CPU utilization
+
+## Team Collaboration
+
+### Sharing Features
+
+<CardGroup cols={2}>
+  <Card title="Dashboard Sharing" icon="share-nodes">
+    Share dashboards with team members via email or link
+  </Card>
+  <Card title="Permission Management" icon="lock">
+    Control who can view or edit your content
+  </Card>
+  <Card title="Comments" icon="comment">
+    Add comments and annotations to charts
+  </Card>
+  <Card title="Version History" icon="code-branch">
+    Track changes to queries and dashboards
+  </Card>
+</CardGroup>
+
+### Collaboration Workflows
+
+1. **Create and Share**
+   - Build a dashboard or query
+   - Click Share button
+   - Invite by email or generate link
+   - Set permissions (view/edit)
+
+2. **Receive and Collaborate**
+   - Receive email notification
+   - View shared content
+   - Add comments and feedback
+   - Duplicate to your workspace
+
+3. **Team Management**
+   - Manage shared dashboards
+   - Revoke access when needed
+   - Transfer ownership
+   - Archive old content
+
+<Note>
+  Shared dashboards appear in the "Shared With Me" tab for easy access.
+</Note>
+
+## Advanced Features
+
+### Query Parameters
+
+Create dynamic queries with parameters:
+
+```sql
+SELECT * FROM orders 
+WHERE order_date >= {{start_date}}
+  AND order_date <= {{end_date}}
+  AND region = {{region}}
+```
+
+### Custom Functions
+
+Define reusable SQL snippets:
+
+```sql
+-- Save as "revenue_by_period"
+SELECT 
+  DATE_TRUNC('{{period}}', order_date) as period,
+  SUM(total_amount) as revenue
+FROM orders
+GROUP BY period
+ORDER BY period
+```
+
+### Scheduled Queries
+
+- Run queries on a schedule
+- Email results automatically
+- Refresh dashboards periodically
+- Monitor for data changes
+
+<Warning>
+  Scheduled queries are only available when Azure AI credentials are configured.
+</Warning>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Get Started" icon="rocket" href="/quickstart">
+    Follow the quickstart guide to set up Quail
+  </Card>
+  <Card title="Architecture" icon="sitemap">
+    Learn about the Agentic Hydration Pattern
+  </Card>
+  <Card title="Best Practices" icon="star">
+    Tips for optimal query performance
+  </Card>
+  <Card title="GitHub Repository" icon="github" href="https://github.com/O1af/quail">
+    Explore the source code and contribute
+  </Card>
+</CardGroup>

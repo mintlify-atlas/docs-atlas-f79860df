@@ -1,0 +1,452 @@
+---
+title: Database Setup
+description: Configure MongoDB and Supabase for Quail BI
+---
+
+## Overview
+
+Quail BI requires two database services:
+
+<CardGroup cols={2}>
+  <Card title="MongoDB" icon="database">
+    Stores user data, connections, dashboards, and chat history
+  </Card>
+  <Card title="Supabase" icon="shield">
+    Handles user authentication and session management
+  </Card>
+</CardGroup>
+
+## MongoDB Setup
+
+### Option 1: MongoDB Atlas (Recommended)
+
+<Steps>
+  <Step title="Create Account">
+    Sign up for a free account at [mongodb.com/cloud/atlas](https://www.mongodb.com/cloud/atlas)
+  </Step>
+  <Step title="Create Cluster">
+    1. Click **Create** to create a new cluster
+    2. Choose the **Free Shared** tier (M0)
+    3. Select a cloud provider and region close to your users
+    4. Name your cluster (e.g., `quail-production`)
+    5. Click **Create Cluster**
+  </Step>
+  <Step title="Configure Network Access">
+    1. Navigate to **Network Access** in the sidebar
+    2. Click **Add IP Address**
+    3. Choose **Allow Access from Anywhere** (`0.0.0.0/0`) for development
+    4. For production, whitelist specific IPs
+  </Step>
+  <Step title="Create Database User">
+    1. Navigate to **Database Access**
+    2. Click **Add New Database User**
+    3. Choose **Password** authentication
+    4. Create a username and secure password
+    5. Set **Database User Privileges** to **Read and write to any database**
+    6. Click **Add User**
+  </Step>
+  <Step title="Get Connection String">
+    1. Go to **Database** and click **Connect** on your cluster
+    2. Choose **Connect your application**
+    3. Copy the connection string:
+    ```
+    mongodb+srv://<username>:<password>@cluster.mongodb.net/<database>?retryWrites=true&w=majority
+    ```
+    4. Replace `<username>`, `<password>`, and `<database>` with your values
+  </Step>
+  <Step title="Configure Environment">
+    Add the connection string to `.env.local`:
+    ```bash
+    MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/quail?retryWrites=true&w=majority
+    ```
+  </Step>
+</Steps>
+
+<Warning>
+  Never commit your connection string to version control. Keep it in `.env.local` only.
+</Warning>
+
+### Option 2: Local MongoDB
+
+For development, you can run MongoDB locally:
+
+<Tabs>
+  <Tab title="macOS">
+    ```bash
+    # Install via Homebrew
+    brew tap mongodb/brew
+    brew install mongodb-community@7.0
+    
+    # Start MongoDB
+    brew services start mongodb-community@7.0
+    
+    # Connection string
+    MONGODB_URI=mongodb://localhost:27017/quail
+    ```
+  </Tab>
+  <Tab title="Linux">
+    ```bash
+    # Ubuntu/Debian
+    wget -qO - https://www.mongodb.org/static/pgp/server-7.0.asc | sudo apt-key add -
+    echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu $(lsb_release -sc)/mongodb-org/7.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list
+    sudo apt-get update
+    sudo apt-get install -y mongodb-org
+    
+    # Start MongoDB
+    sudo systemctl start mongod
+    
+    # Connection string
+    MONGODB_URI=mongodb://localhost:27017/quail
+    ```
+  </Tab>
+  <Tab title="Windows">
+    1. Download MongoDB Community Server from [mongodb.com/try/download/community](https://www.mongodb.com/try/download/community)
+    2. Run the installer
+    3. Start MongoDB from Services or Command Prompt
+    4. Connection string:
+    ```
+    MONGODB_URI=mongodb://localhost:27017/quail
+    ```
+  </Tab>
+  <Tab title="Docker">
+    ```bash
+    # Run MongoDB container
+    docker run -d \
+      --name quail-mongodb \
+      -p 27017:27017 \
+      -e MONGO_INITDB_ROOT_USERNAME=admin \
+      -e MONGO_INITDB_ROOT_PASSWORD=password \
+      -e MONGO_INITDB_DATABASE=quail \
+      -v quail-mongo-data:/data/db \
+      mongo:7.0
+    
+    # Connection string
+    MONGODB_URI=mongodb://admin:password@localhost:27017/quail?authSource=admin
+    ```
+  </Tab>
+</Tabs>
+
+### MongoDB Database Schema
+
+Quail automatically creates these collections:
+
+<Accordion title="users">
+  Stores user account information (synced with Supabase).
+  
+  ```json
+  {
+    "_id": "ObjectId",
+    "supabaseId": "uuid",
+    "email": "user@example.com",
+    "createdAt": "ISODate",
+    "updatedAt": "ISODate"
+  }
+  ```
+  
+  **Indexes**: `{ supabaseId: 1 }` (unique), `{ email: 1 }`
+</Accordion>
+
+<Accordion title="connections">
+  Stores encrypted database connection strings.
+  
+  ```json
+  {
+    "_id": "ObjectId",
+    "userId": "ObjectId",
+    "name": "Production DB",
+    "type": "postgresql",
+    "encryptedConnectionString": "encrypted-data-here",
+    "createdAt": "ISODate",
+    "updatedAt": "ISODate",
+    "lastConnected": "ISODate"
+  }
+  ```
+  
+  **Indexes**: `{ userId: 1 }`, `{ userId: 1, name: 1 }`
+</Accordion>
+
+<Accordion title="dashboards">
+  Stores dashboard configurations.
+  
+  ```json
+  {
+    "_id": "ObjectId",
+    "userId": "ObjectId",
+    "name": "Sales Dashboard",
+    "layout": [],
+    "filters": [],
+    "createdAt": "ISODate",
+    "updatedAt": "ISODate"
+  }
+  ```
+  
+  **Indexes**: `{ userId: 1 }`, `{ userId: 1, createdAt: -1 }`
+</Accordion>
+
+<Accordion title="charts">
+  Stores chart configurations.
+  
+  ```json
+  {
+    "_id": "ObjectId",
+    "userId": "ObjectId",
+    "dashboardId": "ObjectId",
+    "connectionId": "ObjectId",
+    "name": "Monthly Revenue",
+    "type": "line",
+    "config": {},
+    "query": "SELECT ...",
+    "createdAt": "ISODate",
+    "updatedAt": "ISODate"
+  }
+  ```
+  
+  **Indexes**: `{ userId: 1 }`, `{ dashboardId: 1 }`
+</Accordion>
+
+<Accordion title="chats">
+  Stores chat conversation history.
+  
+  ```json
+  {
+    "_id": "ObjectId",
+    "userId": "ObjectId",
+    "connectionId": "ObjectId",
+    "messages": [],
+    "createdAt": "ISODate",
+    "updatedAt": "ISODate"
+  }
+  ```
+  
+  **Indexes**: `{ userId: 1 }`, `{ userId: 1, createdAt: -1 }`
+</Accordion>
+
+### Creating Indexes
+
+For optimal performance, create indexes manually:
+
+```javascript
+// Connect to your database
+use quail;
+
+// User indexes
+db.users.createIndex({ "supabaseId": 1 }, { unique: true });
+db.users.createIndex({ "email": 1 });
+
+// Connection indexes
+db.connections.createIndex({ "userId": 1 });
+db.connections.createIndex({ "userId": 1, "name": 1 });
+
+// Dashboard indexes
+db.dashboards.createIndex({ "userId": 1 });
+db.dashboards.createIndex({ "userId": 1, "createdAt": -1 });
+
+// Chart indexes
+db.charts.createIndex({ "userId": 1 });
+db.charts.createIndex({ "dashboardId": 1 });
+
+// Chat indexes
+db.chats.createIndex({ "userId": 1 });
+db.chats.createIndex({ "userId": 1, "createdAt": -1 });
+```
+
+## Supabase Setup
+
+### Create Supabase Project
+
+<Steps>
+  <Step title="Sign Up">
+    Create an account at [supabase.com](https://supabase.com)
+  </Step>
+  <Step title="Create Project">
+    1. Click **New Project**
+    2. Enter a project name (e.g., `quail-production`)
+    3. Set a secure database password (save this!)
+    4. Choose a region close to your users
+    5. Click **Create new project**
+    
+    Wait 2-3 minutes for the project to initialize.
+  </Step>
+  <Step title="Get API Keys">
+    1. Go to **Settings → API** in the sidebar
+    2. Copy three values:
+       - **Project URL** (e.g., `https://abc123.supabase.co`)
+       - **anon** **public** key (under "Project API keys")
+       - **service_role** **secret** key (click "Reveal" to see it)
+  </Step>
+  <Step title="Configure Environment">
+    Add these to `.env.local`:
+    
+    ```bash .env.local
+    NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+    NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
+    SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
+    ```
+  </Step>
+</Steps>
+
+<Warning>
+  The `service_role` key bypasses Row Level Security. Keep it secret and never expose it to the client.
+</Warning>
+
+### Configure Authentication
+
+<Steps>
+  <Step title="Enable Email Authentication">
+    1. Go to **Authentication → Providers**
+    2. Ensure **Email** is enabled
+    3. Configure email templates (optional)
+  </Step>
+  <Step title="Configure Email Templates (Optional)">
+    1. Go to **Authentication → Email Templates**
+    2. Customize the confirmation and password reset emails
+    3. Add your branding and domain
+  </Step>
+  <Step title="Set Up Redirect URLs">
+    1. Go to **Authentication → URL Configuration**
+    2. Add your site URL (e.g., `https://quail.yourdomain.com`)
+    3. Add redirect URLs:
+       - `http://localhost:3000/**` (for development)
+       - `https://yourdomain.com/**` (for production)
+  </Step>
+</Steps>
+
+### Configure Row Level Security (Optional)
+
+For additional security, enable Row Level Security (RLS) on Supabase tables:
+
+<Note>
+  Quail stores most data in MongoDB, so RLS is optional. However, if you add tables to Supabase, enable RLS.
+</Note>
+
+```sql
+-- Enable RLS on a table
+ALTER TABLE your_table ENABLE ROW LEVEL SECURITY;
+
+-- Allow users to read their own data
+CREATE POLICY "Users can view own data"
+ON your_table
+FOR SELECT
+USING (auth.uid() = user_id);
+
+-- Allow users to insert their own data
+CREATE POLICY "Users can insert own data"
+ON your_table
+FOR INSERT
+WITH CHECK (auth.uid() = user_id);
+```
+
+### Testing Authentication
+
+Verify authentication is working:
+
+```typescript
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
+// Test sign up
+const { data, error } = await supabase.auth.signUp({
+  email: 'test@example.com',
+  password: 'securepassword123',
+});
+
+if (error) {
+  console.error('Auth error:', error);
+} else {
+  console.log('Sign up successful:', data);
+}
+```
+
+## Production Considerations
+
+### MongoDB
+
+<CardGroup cols={2}>
+  <Card title="Backups" icon="database">
+    Enable automated backups in MongoDB Atlas or set up regular `mongodump` backups
+  </Card>
+  <Card title="Monitoring" icon="chart-line">
+    Use MongoDB Atlas monitoring or tools like Datadog, New Relic
+  </Card>
+  <Card title="Scaling" icon="arrow-up">
+    Upgrade to a larger cluster tier as usage grows
+  </Card>
+  <Card title="Security" icon="shield">
+    Use IP whitelisting and strong passwords
+  </Card>
+</CardGroup>
+
+### Supabase
+
+<CardGroup cols={2}>
+  <Card title="Custom Domain" icon="globe">
+    Configure a custom domain for authentication emails
+  </Card>
+  <Card title="Rate Limiting" icon="gauge">
+    Monitor API usage and configure rate limits
+  </Card>
+  <Card title="Upgrade Plan" icon="arrow-up">
+    Free tier has limits; upgrade for production
+  </Card>
+  <Card title="Email Provider" icon="envelope">
+    Configure a custom SMTP provider for better deliverability
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+<Accordion title="MongoDB connection fails">
+  Check these common issues:
+  
+  1. **Connection string format**: Ensure no extra spaces or line breaks
+  2. **Network access**: Verify IP is whitelisted in MongoDB Atlas
+  3. **Credentials**: Check username and password are correct
+  4. **Database name**: Ensure the database name exists
+  
+  Test connection with MongoDB Compass:
+  ```bash
+  # Download MongoDB Compass and test the connection string
+  ```
+</Accordion>
+
+<Accordion title="Supabase authentication doesn't work">
+  Common issues:
+  
+  1. **Wrong keys**: Verify you're using the correct anon and service_role keys
+  2. **URL mismatch**: Check the project URL matches your Supabase project
+  3. **Email not confirmed**: Check inbox for confirmation email
+  4. **Redirect URL**: Add your site URL to allowed redirect URLs
+  
+  Test in Supabase dashboard:
+  1. Go to **Authentication → Users**
+  2. Try creating a test user
+</Accordion>
+
+<Accordion title="'NEXT_PUBLIC_SUPABASE_URL is not defined' error">
+  Environment variables are not loaded:
+  
+  1. Verify `.env.local` exists in project root
+  2. Restart the dev server after adding variables
+  3. Check variable names match exactly (case-sensitive)
+</Accordion>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Environment Variables" icon="gear" href="/deployment/environment">
+    Configure all environment variables
+  </Card>
+  <Card title="Configuration" icon="sliders" href="/deployment/configuration">
+    Advanced configuration options
+  </Card>
+  <Card title="Security" icon="shield" href="/deployment/security-best-practices">
+    Secure your databases
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/deployment/troubleshooting">
+    Fix common database issues
+  </Card>
+</CardGroup>

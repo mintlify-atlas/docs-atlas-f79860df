@@ -1,0 +1,257 @@
+---
+title: Schema Explorer
+description: Browse and explore your database structure with the interactive Schema Explorer
+---
+
+The Schema Explorer provides a comprehensive view of your database structure, allowing you to browse tables, inspect columns, view relationships, and understand your data model at a glance.
+
+## Overview
+
+The Schema Explorer is available in the Connections section and displays your database structure in an intuitive three-panel layout:
+
+- **Schema Tree**: Navigate through your database schemas, tables, and views
+- **Table Details**: View columns, indexes, and constraints for selected tables
+- **Relationships Panel**: Visualize foreign key relationships and table connections
+
+## Accessing Schema Explorer
+
+<Steps>
+  <Step title="Navigate to Connections">
+    From the main navigation, go to the **Connections** section and select your active database connection.
+  </Step>
+  
+  <Step title="Open Schema View">
+    Click on the **Schema** tab to open the Database Schema Explorer.
+  </Step>
+  
+  <Step title="Browse Your Database">
+    Use the search bar in the header to filter tables, or browse through the schema tree to find specific tables.
+  </Step>
+</Steps>
+
+## Browsing Tables
+
+The left panel displays a hierarchical tree of your database structure:
+
+```
+Database
+├── Schema 1
+│   ├── Table 1
+│   ├── Table 2
+│   └── View 1
+└── Schema 2
+    ├── Table 3
+    └── Table 4
+```
+
+<Tip>
+  Use the search bar to quickly find tables by name. The search filters in real-time as you type.
+</Tip>
+
+### Table Selection
+
+Click on any table name to view its detailed structure in the center panel. The selected table will be highlighted in the tree.
+
+## Viewing Table Details
+
+When you select a table, the center panel displays comprehensive information:
+
+### Columns Tab
+
+The Columns tab shows detailed information about each column:
+
+| Column Info | Description |
+|------------|-------------|
+| **Name** | Column name with copy-to-clipboard functionality |
+| **Type** | Data type with length/precision (e.g., `VARCHAR(255)`, `DECIMAL(10,2)`) |
+| **Constraints** | Visual badges for constraints: `PK` (Primary Key), `FK` (Foreign Key), `UQ` (Unique), `NOT NULL` |
+| **Attributes** | Additional properties like Identity columns and default values |
+
+<Note>
+  Columns are sorted by their ordinal position, matching the order defined in your database schema.
+</Note>
+
+#### Column Badges
+
+Each column displays visual indicators for its properties:
+
+- **PK** - Primary key column
+- **FK** - Foreign key column (references another table)
+- **UQ** - Unique constraint
+- **NOT NULL** - Cannot contain null values
+- **Identity** - Auto-incrementing identity column
+
+#### Quick Copy
+
+Click the clipboard icon next to any column name to copy it to your clipboard - useful when writing queries.
+
+### Indexes Tab
+
+The Indexes tab displays all indexes defined on the selected table, including:
+
+- Index name
+- Index type (e.g., B-tree, Hash)
+- Indexed columns
+- Uniqueness constraints
+
+<Tip>
+  Understanding your indexes helps optimize query performance. Primary keys automatically create indexes.
+</Tip>
+
+## Understanding Relationships
+
+The Relationships panel shows foreign key connections between tables.
+
+<Steps>
+  <Step title="Enable Relationships View">
+    Click the **Toggle Relationships** button (with network icon) in the table details header.
+  </Step>
+  
+  <Step title="View Connections">
+    The right panel opens, displaying two types of relationships:
+    - **References to Other Tables**: Foreign keys in the current table pointing to other tables
+    - **Referenced by Other Tables**: Other tables that have foreign keys pointing to this table
+  </Step>
+  
+  <Step title="Navigate Relationships">
+    Each relationship shows the source and target tables with their connecting columns:
+    ```
+    orders.customer_id → customers.id
+    ```
+  </Step>
+</Steps>
+
+### Relationship Types
+
+#### Outgoing References
+
+Shows foreign keys in the current table:
+
+```
+profiles.id → full_count.id (one-to-one)
+profiles.id → mini_tokens.id (one-to-one)
+```
+
+#### Incoming References
+
+Shows tables that reference the current table through foreign keys.
+
+<Note>
+  Understanding table relationships is crucial for writing efficient JOINs and maintaining referential integrity.
+</Note>
+
+## Layout Customization
+
+The Schema Explorer uses resizable panels that you can adjust to your preference:
+
+- Drag the vertical dividers between panels to resize
+- Collapse the relationships panel when not needed
+- Expand the tree view for databases with deep schema hierarchies
+
+<Tip>
+  Your panel sizes are preserved for your session, so you can set up a comfortable workspace.
+</Tip>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Use Search Efficiently" icon="magnifying-glass">
+    Filter large databases by typing table names in the search bar. The tree updates in real-time.
+  </Card>
+  
+  <Card title="Explore Relationships" icon="diagram-project">
+    Toggle the relationships panel when designing queries to understand table connections.
+  </Card>
+  
+  <Card title="Copy Column Names" icon="copy">
+    Use the clipboard icon to quickly copy column names when writing SQL queries.
+  </Card>
+  
+  <Card title="Check Constraints" icon="shield-check">
+    Review column constraints before inserting data to avoid constraint violations.
+  </Card>
+</CardGroup>
+
+## Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `/` or `Ctrl+F` | Focus search bar |
+| `Esc` | Clear search |
+| `Tab` | Navigate between panels |
+
+## Common Use Cases
+
+### Designing Queries
+
+Before writing a complex query:
+
+1. Open the Schema Explorer
+2. Select the primary table
+3. Enable the Relationships panel
+4. Identify foreign keys for JOIN clauses
+5. Copy column names for SELECT statements
+
+### Understanding Data Models
+
+When working with unfamiliar databases:
+
+1. Browse through the schema tree
+2. Review table structures and column types
+3. Explore relationships to understand data flow
+4. Check indexes to understand performance considerations
+
+### Data Validation
+
+Before importing or modifying data:
+
+1. Check column data types and lengths
+2. Review NOT NULL constraints
+3. Identify primary and foreign key relationships
+4. Verify unique constraints
+
+<Note>
+  The Schema Explorer is read-only and does not allow modifications to your database structure. Use your database management tools for schema changes.
+</Note>
+
+## Troubleshooting
+
+### Tables Not Showing
+
+If tables aren't visible:
+
+- Verify your database connection is active
+- Check that you have appropriate permissions to view schema information
+- Ensure the database contains tables (not just an empty schema)
+
+### Search Not Finding Tables
+
+- Search is case-insensitive and matches partial names
+- Clear the search and browse manually to verify table exists
+- Check if the table is in a different schema
+
+### Relationships Not Displaying
+
+- Ensure foreign key constraints are defined in your database
+- Some databases may not expose relationship metadata
+- Verify you have permissions to view constraint information
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="SQL Editor" href="/guide/sql-editor">
+    Write and execute SQL queries using insights from the Schema Explorer
+  </Card>
+  
+  <Card title="Data Export" href="/guide/data-export">
+    Export query results in various formats
+  </Card>
+  
+  <Card title="Charts" href="/guide/charts">
+    Create charts and graphs from your data
+  </Card>
+  
+  <Card title="Database Connections" href="/guide/connections">
+    Manage multiple database connections
+  </Card>
+</CardGroup>

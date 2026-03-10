@@ -1,0 +1,535 @@
+---
+title: Configuration
+description: Advanced configuration options for Quail BI
+---
+
+## Overview
+
+This page covers advanced configuration options for customizing Quail BI beyond basic environment variables.
+
+## Next.js Configuration
+
+Quail's Next.js configuration is defined in `next.config.mjs`:
+
+```javascript next.config.mjs
+import { setupDevPlatform } from '@cloudflare/next-on-pages/next-dev';
+
+if (process.env.NODE_ENV === 'development') {
+  await setupDevPlatform();
+}
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  output: 'standalone',
+  reactStrictMode: true,
+  images: {
+    domains: ['media.brand.dev'],
+  },
+  experimental: {
+    optimizePackageImports: ['recharts', '@radix-ui/react-icons'],
+  },
+};
+
+export default nextConfig;
+```
+
+### Output Mode
+
+```javascript
+output: 'standalone'
+```
+
+<Info>
+  The `standalone` output mode creates a minimal Node.js server with all required dependencies. This is ideal for containerized deployments.
+</Info>
+
+### Image Domains
+
+```javascript
+images: {
+  domains: ['media.brand.dev'],
+}
+```
+
+Add domains that host images you want to use with Next.js `<Image>` component:
+
+```javascript
+images: {
+  domains: [
+    'media.brand.dev',
+    'your-cdn.com',
+    'avatars.githubusercontent.com',
+  ],
+}
+```
+
+### Package Import Optimization
+
+```javascript
+experimental: {
+  optimizePackageImports: ['recharts', '@radix-ui/react-icons'],
+}
+```
+
+<Tip>
+  This reduces bundle size by only importing used components from large libraries.
+</Tip>
+
+## TypeScript Configuration
+
+TypeScript settings are in `tsconfig.json`:
+
+```json tsconfig.json
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}
+```
+
+### Key Settings
+
+<Accordion title="Strict Mode">
+  ```json
+  "strict": true
+  ```
+  
+  Enables all strict type-checking options. Recommended for catching bugs early.
+</Accordion>
+
+<Accordion title="Path Aliases">
+  ```json
+  "paths": {
+    "@/*": ["./*"]
+  }
+  ```
+  
+  Allows importing with `@/` prefix:
+  
+  ```typescript
+  import { Button } from '@/components/ui/button';
+  ```
+  
+  instead of:
+  
+  ```typescript
+  import { Button } from '../../components/ui/button';
+  ```
+</Accordion>
+
+## Middleware Configuration
+
+The `middleware.ts` file handles authentication and request processing:
+
+```typescript middleware.ts
+import { createServerClient } from '@supabase/ssr';
+import { NextResponse, type NextRequest } from 'next/server';
+
+export async function middleware(request: NextRequest) {
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  });
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return request.cookies.get(name)?.value;
+        },
+        set(name: string, value: string, options: any) {
+          response.cookies.set({
+            name,
+            value,
+            ...options,
+          });
+        },
+        remove(name: string, options: any) {
+          response.cookies.set({
+            name,
+            value: '',
+            ...options,
+          });
+        },
+      },
+    }
+  );
+
+  const { data: { session } } = await supabase.auth.getSession();
+
+  // Protect authenticated routes
+  if (!session && request.nextUrl.pathname.startsWith('/app')) {
+    const redirectUrl = new URL('/login', request.url);
+    redirectUrl.searchParams.set('redirect', request.nextUrl.pathname);
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  return response;
+}
+
+export const config = {
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
+};
+```
+
+### Customizing Protected Routes
+
+Add or remove protected path patterns:
+
+```typescript
+// Protect all /app and /dashboard routes
+if (!session && (
+  request.nextUrl.pathname.startsWith('/app') ||
+  request.nextUrl.pathname.startsWith('/dashboard')
+)) {
+  // Redirect to login
+}
+```
+
+### Customizing Matcher
+
+The matcher determines which routes run middleware:
+
+```typescript
+export const config = {
+  matcher: [
+    // Run on all routes except:
+    '/((?!_next/static|_next/image|favicon.ico|api/public).*)',
+  ],
+};
+```
+
+## Tailwind Configuration
+
+Tailwind CSS is configured in `tailwind.config.ts`:
+
+```typescript tailwind.config.ts
+import type { Config } from 'tailwindcss';
+import tailwindcssAnimate from 'tailwindcss-animate';
+
+const config: Config = {
+  darkMode: ['class'],
+  content: [
+    './pages/**/*.{ts,tsx}',
+    './components/**/*.{ts,tsx}',
+    './app/**/*.{ts,tsx}',
+    './src/**/*.{ts,tsx}',
+  ],
+  theme: {
+    extend: {
+      colors: {
+        border: 'hsl(var(--border))',
+        input: 'hsl(var(--input))',
+        ring: 'hsl(var(--ring))',
+        background: 'hsl(var(--background))',
+        foreground: 'hsl(var(--foreground))',
+        primary: {
+          DEFAULT: 'hsl(var(--primary))',
+          foreground: 'hsl(var(--primary-foreground))',
+        },
+        // ... other colors
+      },
+      borderRadius: {
+        lg: 'var(--radius)',
+        md: 'calc(var(--radius) - 2px)',
+        sm: 'calc(var(--radius) - 4px)',
+      },
+    },
+  },
+  plugins: [tailwindcssAnimate],
+};
+
+export default config;
+```
+
+### Custom Theme Colors
+
+Modify colors in `app/globals.css`:
+
+```css app/globals.css
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --primary: 222.2 47.4% 11.2%;
+    /* ... other variables */
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    /* ... other variables */
+  }
+}
+```
+
+## MongoDB Configuration
+
+MongoDB client configuration in `lib/config/mongodb.ts`:
+
+```typescript lib/config/mongodb.ts
+import { MongoClient } from 'mongodb';
+
+if (!process.env.MONGODB_URI) {
+  throw new Error('Please add your MongoDB URI to .env.local');
+}
+
+const uri = process.env.MONGODB_URI;
+const options = {
+  maxPoolSize: 10,
+  minPoolSize: 5,
+  maxIdleTimeMS: 30000,
+};
+
+let client: MongoClient;
+let clientPromise: Promise<MongoClient>;
+
+if (process.env.NODE_ENV === 'development') {
+  // In development, use a global variable to preserve the client across hot reloads
+  let globalWithMongo = global as typeof globalThis & {
+    _mongoClientPromise?: Promise<MongoClient>;
+  };
+
+  if (!globalWithMongo._mongoClientPromise) {
+    client = new MongoClient(uri, options);
+    globalWithMongo._mongoClientPromise = client.connect();
+  }
+  clientPromise = globalWithMongo._mongoClientPromise;
+} else {
+  // In production, create a new client
+  client = new MongoClient(uri, options);
+  clientPromise = client.connect();
+}
+
+export default clientPromise;
+```
+
+### Connection Pool Settings
+
+```typescript
+const options = {
+  maxPoolSize: 10,    // Maximum connections
+  minPoolSize: 5,     // Minimum connections
+  maxIdleTimeMS: 30000, // Close idle connections after 30s
+};
+```
+
+<Tip>
+  Adjust pool sizes based on your traffic:
+  - Low traffic: `maxPoolSize: 5`, `minPoolSize: 2`
+  - High traffic: `maxPoolSize: 50`, `minPoolSize: 10`
+</Tip>
+
+## AI Provider Configuration
+
+Configure AI providers in `lib/ai/provider.ts`:
+
+```typescript lib/ai/provider.ts
+import { createAzure } from '@ai-sdk/azure';
+
+// Azure OpenAI configuration
+const azure = createAzure({
+  apiKey: process.env.AZURE_OPENAI_API_KEY!,
+  endpoint: process.env.AZURE_OPENAI_ENDPOINT!,
+});
+
+export const model = azure(process.env.AZURE_OPENAI_DEPLOYMENT_NAME!);
+```
+
+### Switching AI Providers
+
+<Tabs>
+  <Tab title="OpenAI">
+    ```typescript
+    import { openai } from '@ai-sdk/openai';
+    
+    export const model = openai('gpt-4o');
+    ```
+    
+    Set `OPENAI_API_KEY` in environment.
+  </Tab>
+  <Tab title="Anthropic Claude">
+    ```typescript
+    import { anthropic } from '@ai-sdk/anthropic';
+    
+    export const model = anthropic('claude-3-5-sonnet-20241022');
+    ```
+    
+    Set `ANTHROPIC_API_KEY` in environment.
+  </Tab>
+  <Tab title="Google Gemini">
+    ```typescript
+    import { google } from '@ai-sdk/google';
+    
+    export const model = google('models/gemini-1.5-pro');
+    ```
+    
+    Set `GOOGLE_GENERATIVE_AI_API_KEY` in environment.
+  </Tab>
+</Tabs>
+
+## Component Library Configuration
+
+Components are configured in `components.json`:
+
+```json components.json
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "default",
+  "rsc": true,
+  "tsx": true,
+  "tailwind": {
+    "config": "tailwind.config.ts",
+    "css": "app/globals.css",
+    "baseColor": "slate",
+    "cssVariables": true
+  },
+  "aliases": {
+    "components": "@/components",
+    "utils": "@/lib/utils"
+  }
+}
+```
+
+<Info>
+  This configuration is used by the `shadcn/ui` CLI for adding components.
+</Info>
+
+## Build Configuration
+
+Customize the build process in `package.json`:
+
+```json package.json
+{
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build && cp -r .next/static .next/standalone/.next/ && cp -r public .next/standalone/",
+    "start": "next start",
+    "lint": "next lint"
+  }
+}
+```
+
+### Turbopack (Development)
+
+```json
+"dev": "next dev --turbopack"
+```
+
+<Info>
+  Turbopack is Next.js's new bundler, providing faster hot module replacement. Remove `--turbopack` to use webpack.
+</Info>
+
+### Standalone Build
+
+```json
+"build": "next build && cp -r .next/static .next/standalone/.next/ && cp -r public .next/standalone/"
+```
+
+Creates a self-contained build in `.next/standalone/` with:
+- Minimal Node.js server
+- All required dependencies
+- Static assets
+- Public files
+
+## Performance Tuning
+
+### Enable Caching
+
+Add Redis for caching query results:
+
+```typescript lib/cache/redis.ts
+import { Redis } from '@upstash/redis';
+
+const redis = new Redis({
+  url: process.env.REDIS_URL!,
+  token: process.env.REDIS_TOKEN!,
+});
+
+export async function cacheQuery(
+  key: string,
+  data: any,
+  ttl: number = 300 // 5 minutes
+) {
+  await redis.set(key, JSON.stringify(data), { ex: ttl });
+}
+
+export async function getCachedQuery(key: string) {
+  const data = await redis.get(key);
+  return data ? JSON.parse(data) : null;
+}
+```
+
+### Enable Compression
+
+Add compression middleware:
+
+```typescript middleware.ts
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+
+export function middleware(request: NextRequest) {
+  const response = NextResponse.next();
+  
+  // Enable compression
+  response.headers.set('Content-Encoding', 'gzip');
+  
+  return response;
+}
+```
+
+### Database Indexing
+
+Add indexes to MongoDB collections:
+
+```javascript
+// In MongoDB shell or via driver
+db.connections.createIndex({ userId: 1 });
+db.dashboards.createIndex({ userId: 1, createdAt: -1 });
+db.charts.createIndex({ dashboardId: 1 });
+```
+
+## Related Documentation
+
+<CardGroup cols={2}>
+  <Card title="Environment Variables" icon="gear" href="/deployment/environment">
+    Configure all environment variables
+  </Card>
+  <Card title="Security" icon="shield" href="/deployment/security-best-practices">
+    Security configuration and best practices
+  </Card>
+  <Card title="AI Integration" icon="brain" href="/concepts/ai-integration">
+    Configure AI providers and features
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/deployment/troubleshooting">
+    Fix configuration issues
+  </Card>
+</CardGroup>

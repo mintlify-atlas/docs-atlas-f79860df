@@ -1,0 +1,457 @@
+---
+title: Data Export
+description: Export query results and data in multiple formats including CSV, Excel, PDF, and SQL
+---
+
+Quail BI provides flexible data export capabilities, allowing you to download query results in various formats for reporting, analysis, or sharing with stakeholders.
+
+## Supported Export Formats
+
+Quail supports four export formats, each optimized for different use cases:
+
+<CardGroup cols={2}>
+  <Card title="CSV" icon="file-csv">
+    Comma-separated values for universal compatibility and data portability
+  </Card>
+  
+  <Card title="Excel" icon="file-excel">
+    XLSX format for advanced spreadsheet analysis and formatting
+  </Card>
+  
+  <Card title="PDF" icon="file-pdf">
+    Professional reports with formatted tables (uses jsPDF)
+  </Card>
+  
+  <Card title="SQL" icon="database">
+    Export your SQL queries as .sql files for versioning and sharing
+  </Card>
+</CardGroup>
+
+## Exporting Query Results
+
+After executing a query, you can export the results using the download button in the results panel.
+
+<Steps>
+  <Step title="Execute Your Query">
+    Run your SQL query in the Query Editor to generate results in the data table.
+  </Step>
+  
+  <Step title="Open Export Menu">
+    Click the **Download** button (download icon) in the results toolbar, or use the keyboard shortcut `Ctrl+S` (Windows/Linux) or `Cmd+S` (Mac).
+  </Step>
+  
+  <Step title="Select Format">
+    Choose your desired export format from the dropdown menu:
+    - Download CSV
+    - Download Excel
+    - Download PDF
+  </Step>
+  
+  <Step title="Save File">
+    Your browser will prompt you to save the file. The default filename follows the pattern:
+    - CSV: `query_results.csv` or `selected_data.csv`
+    - Excel: `query_results.xlsx` or `selected_data.xlsx`
+    - PDF: `query_results.pdf` or `selected_data.pdf`
+  </Step>
+</Steps>
+
+<Tip>
+  Use `Ctrl+S` / `Cmd+S` to quickly toggle the export menu without clicking.
+</Tip>
+
+## Selective Data Export
+
+Quail allows you to export either all results or only selected rows.
+
+### Exporting Selected Rows
+
+<Steps>
+  <Step title="Select Rows">
+    Use the checkboxes in the first column of the results table to select specific rows you want to export.
+  </Step>
+  
+  <Step title="Export Selection">
+    Click the Download button and choose your format. The export will include only the selected rows.
+  </Step>
+</Steps>
+
+### Exporting All Data
+
+If no rows are selected, the export automatically includes all query results.
+
+<Note>
+  The export respects column visibility settings. Hidden columns will not be included in the exported file.
+</Note>
+
+## Export Format Details
+
+### CSV Export
+
+CSV (Comma-Separated Values) is ideal for data portability and importing into other systems.
+
+**Features:**
+- Universal format compatible with all spreadsheet applications
+- Handles special characters and commas in data values
+- Properly escapes quotes in text fields
+- UTF-8 encoding for international character support
+
+**Implementation:**
+```typescript
+import { downloadCSV } from '@/components/stores/utils/downloads/downloadCSV';
+
+downloadCSV(data, columns, 'custom_filename');
+```
+
+**Best for:**
+- Importing data into other databases
+- Data processing with scripts
+- Lightweight data transfer
+- Version control-friendly format
+
+### Excel Export
+
+Excel export creates `.xlsx` files using the `xlsx` library (SheetJS).
+
+**Features:**
+- Native Excel format (XLSX)
+- Preserves data types
+- Single worksheet named "Data" or "Selected Data"
+- Compatible with Microsoft Excel, Google Sheets, and LibreOffice
+
+**Implementation:**
+```typescript
+import { downloadExcel } from '@/components/stores/utils/downloads/downloadExcel';
+import * as XLSX from 'xlsx';
+
+downloadExcel(data, columns, 'custom_filename');
+```
+
+**Best for:**
+- Business reports requiring formatting
+- Data analysis with Excel features
+- Sharing with non-technical users
+- Creating pivot tables and charts
+
+<Tip>
+  Excel files maintain cell formatting better than CSV and support multiple data types.
+</Tip>
+
+### PDF Export
+
+PDF export generates professional reports using `jspdf` and `jspdf-autotable`.
+
+**Features:**
+- Professional tabular layout
+- Automatic table pagination for large datasets
+- Dark gray header (RGB: 66, 66, 66)
+- Compact 8pt font for maximum data density
+- 20pt top margin for branding
+
+**Implementation:**
+```typescript
+import { downloadPDF } from '@/components/stores/utils/downloads/downloadPDF';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+
+downloadPDF(data, columns, 'custom_filename');
+```
+
+**Configuration:**
+```typescript
+autoTable(doc, {
+  head: [headers],
+  body: tableData,
+  styles: { fontSize: 8 },
+  headStyles: { fillColor: [66, 66, 66] },
+  margin: { top: 20 },
+});
+```
+
+**Best for:**
+- Executive reports
+- Print-ready documents
+- Archival purposes
+- Email attachments for stakeholders
+
+<Note>
+  PDF exports are optimized for printing with automatic page breaks and consistent formatting.
+</Note>
+
+### SQL Export
+
+Export your SQL queries as reusable `.sql` files.
+
+**Features:**
+- Saves the query text from the editor
+- Timestamp-based default filenames (`query-2026-03-10T14-30-00.sql`)
+- Plain text format for version control
+- Preserves formatting and comments
+
+**Implementation:**
+```typescript
+import { downloadSQL } from '@/components/stores/utils/downloads/downloadSQL';
+
+await downloadSQL('my_query');
+```
+
+**Best for:**
+- Query versioning and backup
+- Sharing queries with team members
+- Building query libraries
+- Documentation purposes
+
+## Column Visibility Control
+
+Control which columns appear in your exports:
+
+<Steps>
+  <Step title="Toggle Column Visibility">
+    Use the column visibility controls in the results table to show/hide specific columns.
+  </Step>
+  
+  <Step title="Verify Selection">
+    Review the visible columns in the table - only these will be exported.
+  </Step>
+  
+  <Step title="Export">
+    Proceed with your export. Hidden columns are automatically excluded from all formats.
+  </Step>
+</Steps>
+
+<Tip>
+  Hide sensitive columns (like passwords or internal IDs) before exporting data for external sharing.
+</Tip>
+
+## Handling Special Data
+
+### NULL Values
+
+NULL values are handled consistently across formats:
+
+- **CSV**: Empty string `""`
+- **Excel**: Empty cell
+- **PDF**: Empty string
+
+### Special Characters
+
+Data containing special characters is properly escaped:
+
+```typescript
+// CSV escaping for commas and quotes
+if (value.includes(',') || value.includes('"')) {
+  return `"${value.replace(/"/g, '""')}"`;
+}
+```
+
+### Large Text Fields
+
+Long text values are preserved in all formats, though PDF may truncate very wide content to fit page width.
+
+### Date and Time
+
+Dates are exported in their string representation. Format dates in your SQL query for consistent output:
+
+```sql
+SELECT 
+  TO_CHAR(created_at, 'YYYY-MM-DD') as creation_date,
+  TO_CHAR(updated_at, 'YYYY-MM-DD HH24:MI:SS') as last_updated
+FROM orders;
+```
+
+## File Naming Conventions
+
+### Default Names
+
+| Export Type | Default Filename |
+|------------|------------------|
+| All rows | `query_results.[format]` |
+| Selected rows | `selected_data.[format]` |
+| SQL query | `query-[timestamp].sql` |
+
+### Custom Names
+
+Provide custom filenames programmatically:
+
+```typescript
+downloadCSV(data, columns, 'sales_report_2026');
+downloadExcel(data, columns, 'monthly_revenue');
+downloadPDF(data, columns, 'executive_summary');
+```
+
+<Note>
+  Custom filenames automatically receive the appropriate file extension (.csv, .xlsx, .pdf, .sql).
+</Note>
+
+## Performance Considerations
+
+### Large Datasets
+
+Exporting large result sets:
+
+- **CSV**: Most efficient for large datasets (direct string concatenation)
+- **Excel**: Moderate memory usage (uses XLSX library)
+- **PDF**: Highest memory usage (rendering and pagination)
+
+<Tip>
+  For datasets over 100,000 rows, CSV is recommended for optimal performance.
+</Tip>
+
+### Browser Limitations
+
+Browser memory limits may affect very large exports:
+
+- Most browsers handle up to 1 million rows in CSV format
+- Excel exports are limited by the XLSX library (approximately 1 million rows)
+- PDF exports should be limited to printable sizes (under 10,000 rows)
+
+### Best Practices
+
+1. **Filter data**: Export only necessary rows using WHERE clauses
+2. **Select columns**: Include only required columns in your query
+3. **Paginate**: For huge datasets, export in batches
+4. **Use CSV**: Choose CSV for maximum performance with large data
+
+## Common Use Cases
+
+### Business Reporting
+
+```sql
+SELECT 
+  DATE_TRUNC('month', order_date) as month,
+  SUM(amount) as total_revenue,
+  COUNT(*) as order_count
+FROM orders
+WHERE order_date >= '2026-01-01'
+GROUP BY 1
+ORDER BY 1;
+```
+
+Export as **PDF** for executive reports or **Excel** for analysis.
+
+### Data Migration
+
+```sql
+SELECT * FROM customers
+WHERE created_at >= '2025-01-01';
+```
+
+Export as **CSV** for importing into another system.
+
+### Sharing Queries
+
+```sql
+-- Monthly sales by region
+SELECT 
+  region,
+  COUNT(*) as sales_count,
+  AVG(amount) as avg_sale
+FROM sales
+GROUP BY region;
+```
+
+Export as **SQL** to share the query with teammates.
+
+### Ad-hoc Analysis
+
+```sql
+SELECT 
+  product_name,
+  SUM(quantity) as total_sold,
+  SUM(revenue) as total_revenue
+FROM product_sales
+GROUP BY product_name
+ORDER BY total_revenue DESC
+LIMIT 100;
+```
+
+Export as **Excel** for pivot tables and charts.
+
+## Troubleshooting
+
+### Export Button Disabled
+
+**Cause**: Export is in progress or no data available
+
+**Solution**: 
+- Wait for current export to complete
+- Execute a query to generate results
+- Verify the query returned data
+
+### Empty File Downloaded
+
+**Cause**: No rows selected and table is empty
+
+**Solution**:
+- Verify your query returned results
+- Check if all columns are hidden
+- Ensure at least one row is visible
+
+### Special Characters Corrupted
+
+**Cause**: Encoding issue with international characters
+
+**Solution**:
+- CSV files use UTF-8 encoding by default
+- Open CSV files with UTF-8 encoding in your spreadsheet app
+- For Excel, the XLSX format handles Unicode natively
+
+### PDF Tables Truncated
+
+**Cause**: Too many columns for page width
+
+**Solution**:
+- Hide unnecessary columns before export
+- Use landscape orientation (future feature)
+- Export as CSV/Excel for wide tables
+
+## Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+S` / `Cmd+S` | Open export menu |
+| `Esc` | Close export menu |
+
+## API Integration
+
+Developers can integrate export functionality programmatically:
+
+```typescript
+import { downloadCSV } from '@/components/stores/utils/downloads/downloadCSV';
+import { downloadExcel } from '@/components/stores/utils/downloads/downloadExcel';
+import { downloadPDF } from '@/components/stores/utils/downloads/downloadPDF';
+import { downloadSQL } from '@/components/stores/utils/downloads/downloadSQL';
+import { SQLData } from '@/components/stores/table_store';
+import { ColumnDef } from '@tanstack/react-table';
+
+// Export query results
+const data: SQLData[] = [...]; // Your query results
+const columns: ColumnDef<SQLData, any>[] = [...]; // Column definitions
+
+// Export to different formats
+downloadCSV(data, columns, 'my_export');
+downloadExcel(data, columns, 'my_export');
+downloadPDF(data, columns, 'my_export');
+
+// Export SQL query
+await downloadSQL('my_query');
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="SQL Editor" href="/guide/sql-editor">
+    Learn how to write and execute SQL queries
+  </Card>
+  
+  <Card title="Schema Explorer" href="/guide/schema-explorer">
+    Explore your database structure before exporting
+  </Card>
+  
+  <Card title="Charts" href="/guide/charts">
+    Create visual representations of your data
+  </Card>
+  
+  <Card title="Dashboards" href="/guide/dashboards">
+    Build interactive dashboards with your data
+  </Card>
+</CardGroup>

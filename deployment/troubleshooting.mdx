@@ -1,0 +1,395 @@
+---
+title: Troubleshooting
+description: Common issues and solutions for Quail BI deployment and operations
+---
+
+## Common Deployment Issues
+
+<CardGroup cols={2}>
+  <Card title="Connection Issues" icon="link-slash">
+    Database connection timeouts, authentication failures, and network issues
+  </Card>
+  <Card title="Build & Runtime Errors" icon="triangle-exclamation">
+    Environment configuration and application startup problems
+  </Card>
+  <Card title="Authentication Problems" icon="lock">
+    Supabase integration and user login issues
+  </Card>
+  <Card title="Performance Issues" icon="gauge">
+    Slow queries, memory leaks, and optimization tips
+  </Card>
+</CardGroup>
+
+## Database Connection Issues
+
+### Connection Timeout
+
+<Accordion title="Symptoms">
+  - Connection test fails with timeout error
+  - Query execution hangs indefinitely
+  - Error: "Connection timeout" or "ETIMEDOUT"
+</Accordion>
+
+<Accordion title="Possible Causes & Solutions">
+  **1. IP Address Not Whitelisted**
+  
+  Most cloud database providers require explicit IP whitelisting. Verify that your deployment IP address is added to your database's firewall rules.
+  
+  <Steps>
+    <Step>Identify your application's outbound IP address</Step>
+    <Step>Add the IP to your database provider's allowed list (see [Database Connections](/customize/connections#important-whitelist-quails-ip-address))</Step>
+    <Step>Test the connection again</Step>
+  </Steps>
+
+  **2. Firewall/Network Configuration**
+  
+  - Check that your database port (default: PostgreSQL 5432, MySQL 3306) is open
+  - Verify VPC/network security groups allow outbound connections
+  - Ensure no corporate firewall is blocking database ports
+
+  **3. Database Server Not Responding**
+  
+  - Confirm your database instance is running
+  - Check database provider's status page for outages
+  - Verify connection string hostname resolves correctly: `nslookup your-db-host.com`
+</Accordion>
+
+### Authentication Failed
+
+<Accordion title="Symptoms">
+  - Error: "password authentication failed"
+  - Error: "Access denied for user"
+  - Connection test fails immediately with auth error
+</Accordion>
+
+<Accordion title="Possible Causes & Solutions">
+  **1. Incorrect Credentials**
+  
+  - Double-check username and password (watch for trailing spaces)
+  - Verify credentials work with a database client (psql, MySQL Workbench)
+  - Check if password contains special characters that need URL encoding
+
+  **2. User Permissions**
+  
+  Quail requires specific database permissions. The user must have at least:
+  - `SELECT` privileges on all tables you want to query
+  - `CONNECT` privilege to the database
+  - Access to `information_schema` for metadata queries
+
+  ```sql
+  -- PostgreSQL: Grant read-only access
+  GRANT CONNECT ON DATABASE your_database TO quail_user;
+  GRANT USAGE ON SCHEMA public TO quail_user;
+  GRANT SELECT ON ALL TABLES IN SCHEMA public TO quail_user;
+  
+  -- MySQL: Grant read-only access
+  GRANT SELECT ON your_database.* TO 'quail_user'@'%';
+  FLUSH PRIVILEGES;
+  ```
+
+  **3. Host/SSL Requirements**
+  
+  - Some providers require SSL connections (Azure, AWS RDS with force_ssl)
+  - Add `?sslmode=require` to PostgreSQL connection strings
+  - Add `?ssl=true` or `?ssl={"rejectUnauthorized":false}` to MySQL connection strings
+</Accordion>
+
+### SSL/TLS Issues
+
+<Accordion title="Symptoms">
+  - Error: "SSL connection required"
+  - Error: "self signed certificate"
+  - Connection works locally but fails in production
+</Accordion>
+
+<Accordion title="Solutions">
+  **For PostgreSQL:**
+  ```
+  postgresql://user:pass@host:5432/db?sslmode=require
+  ```
+
+  **For MySQL:**
+  ```
+  mysql://user:pass@host:3306/db?ssl=true
+  ```
+
+  **Self-signed certificates:**
+  ```
+  postgresql://user:pass@host:5432/db?sslmode=require&sslrootcert=/path/to/ca.crt
+  ```
+
+  <Warning>
+    Avoid using `sslmode=disable` in production environments. If you must accept self-signed certificates, use `sslmode=require` with appropriate certificate validation.
+  </Warning>
+</Accordion>
+
+### Database Not Found
+
+<Accordion title="Symptoms">
+  - Error: "database does not exist"
+  - Error: "Unknown database"
+</Accordion>
+
+<Accordion title="Solutions">
+  - Verify the database name is spelled correctly (case-sensitive on some systems)
+  - Ensure the database has been created on the server
+  - Check that the user has access to the specific database
+  - For PostgreSQL, verify you're connecting to the correct database (not 'postgres' default)
+</Accordion>
+
+## Build & Runtime Errors
+
+### Missing Environment Variables
+
+<Accordion title="Symptoms">
+  - Error: "NEXT_PUBLIC_ENCRYPTION_KEY environment variable is required" (~/workspace/source/components/stores/utils/encrypted_store.ts:9)
+  - Application fails to start
+  - Build process exits with error
+</Accordion>
+
+<Accordion title="Solutions">
+  Verify all required environment variables are set in your deployment platform:
+
+  **Critical Variables:**
+  ```bash
+  NEXT_PUBLIC_ENCRYPTION_KEY=     # 32-character key (generate with: openssl rand -base64 32)
+  NEXT_PUBLIC_SUPABASE_URL=       # Your Supabase project URL
+  NEXT_PUBLIC_SUPABASE_ANON_KEY=  # Supabase anonymous key
+  SUPABASE_SERVICE_ROLE_KEY=      # Supabase service role key
+  MONGODB_URI=                     # MongoDB connection string
+  ```
+
+  <Note>
+    The `NEXT_PUBLIC_ENCRYPTION_KEY` must be exactly 32 characters (256 bits) for AES-256-GCM encryption. Generate a secure key with: `openssl rand -base64 32`
+  </Note>
+
+  **Deployment Platform Setup:**
+  <Tabs>
+    <Tab title="Vercel">
+      1. Go to Project Settings > Environment Variables
+      2. Add each variable with appropriate scope (Production/Preview/Development)
+      3. Redeploy to apply changes
+    </Tab>
+    <Tab title="Docker">
+      ```bash
+      docker run -d \
+        -e NEXT_PUBLIC_ENCRYPTION_KEY="your-key-here" \
+        -e NEXT_PUBLIC_SUPABASE_URL="https://your-project.supabase.co" \
+        # ... other variables
+        your-image:tag
+      ```
+    </Tab>
+    <Tab title="Kubernetes">
+      ```yaml
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: quail-secrets
+      stringData:
+        NEXT_PUBLIC_ENCRYPTION_KEY: "your-key-here"
+        SUPABASE_SERVICE_ROLE_KEY: "your-service-key"
+      ```
+    </Tab>
+  </Tabs>
+</Accordion>
+
+### Build Fails with TypeScript Errors
+
+<Accordion title="Solutions">
+  ```bash
+  # Clean install dependencies
+  rm -rf node_modules .next
+  pnpm install
+  
+  # Run type check
+  pnpm tsc --noEmit
+  
+  # Build with verbose logging
+  pnpm build
+  ```
+
+  If type errors persist:
+  - Ensure Node.js version >= 18.17.0
+  - Verify pnpm version is 10.10.0 or compatible
+  - Check for TypeScript version conflicts in `package.json`
+</Accordion>
+
+### Runtime: Application Crashes on Startup
+
+<Accordion title="Symptoms">
+  - Container/process exits immediately
+  - Error: "Cannot find module"
+  - Next.js fails to initialize
+</Accordion>
+
+<Accordion title="Solutions">
+  **1. Check MongoDB Connection**
+  
+  ```bash
+  # Test MongoDB connection
+  mongosh "$MONGODB_URI" --eval "db.adminCommand('ping')"
+  ```
+
+  **2. Verify Supabase Configuration**
+  
+  - Ensure Supabase project is active and not paused
+  - Verify API keys match your project
+  - Check Supabase service status: https://status.supabase.com
+
+  **3. Check Logs for Specific Errors**
+  
+  ```bash
+  # Docker
+  docker logs container-name
+  
+  # Kubernetes
+  kubectl logs pod-name
+  
+  # Vercel
+  # View logs in Vercel dashboard > Deployments > [deployment] > Logs
+  ```
+</Accordion>
+
+## Authentication Problems
+
+### Supabase Authentication Fails
+
+<Accordion title="Symptoms">
+  - Users cannot log in
+  - Redirect loops after authentication
+  - Error: "Invalid authentication credentials"
+</Accordion>
+
+<Accordion title="Solutions">
+  **1. Verify Supabase Configuration**
+  
+  In your Supabase project dashboard:
+  - Go to Authentication > URL Configuration
+  - Add your deployment URL to "Site URL"
+  - Add your deployment URL to "Redirect URLs" (e.g., `https://your-app.com/auth/callback`)
+
+  **2. Check Middleware Configuration**
+  
+  The middleware.ts file handles session management (~/workspace/source/middleware.ts). Ensure:
+  - `NEXT_PUBLIC_APP_URL` environment variable is set correctly
+  - Cookie settings allow your domain
+
+  **3. Cookie Issues**
+  
+  - Verify cookies are enabled in browser
+  - Check cookie domain settings in Supabase match your deployment domain
+  - For localhost development, ensure using `http://localhost:3000` not `127.0.0.1`
+</Accordion>
+
+### Session Expires Immediately
+
+<Accordion title="Solutions">
+  - Check Supabase JWT expiration settings (Authentication > Settings)
+  - Verify system clock is synchronized (JWT validation is time-sensitive)
+  - Ensure `SUPABASE_SERVICE_ROLE_KEY` is correct and not expired
+</Accordion>
+
+## Query Execution Issues
+
+### Query Execution Timeout
+
+<Accordion title="Symptoms">
+  - Long-running queries never complete
+  - Browser shows loading indefinitely
+  - Error: "Query timeout exceeded"
+</Accordion>
+
+<Accordion title="Solutions">
+  **1. Optimize Query Performance**
+  
+  - Add appropriate indexes to queried columns
+  - Use `LIMIT` clauses for large result sets
+  - Avoid `SELECT *` on tables with many columns
+  - Check query execution plan: `EXPLAIN ANALYZE your_query;`
+
+  **2. Increase Timeout Limits**
+  
+  Default timeout is managed by the Azure Function endpoint. For self-hosted deployments, adjust connection pool settings.
+
+  **3. Query Complexity**
+  
+  - Break complex queries into smaller parts
+  - Use materialized views for frequently accessed aggregations
+  - Consider caching results for expensive queries
+</Accordion>
+
+### Encryption/Decryption Errors
+
+<Accordion title="Symptoms">
+  - Error: "Decryption failed" in console (~/workspace/source/components/stores/utils/encrypted_store.ts:46)
+  - Cannot retrieve saved database connections
+  - Browser localStorage appears corrupted
+</Accordion>
+
+<Accordion title="Solutions">
+  **Root Cause:** The `NEXT_PUBLIC_ENCRYPTION_KEY` was changed after data was encrypted.
+
+  <Warning>
+    **Never change the encryption key after initial deployment.** This will make all previously encrypted data unrecoverable.
+  </Warning>
+
+  **Recovery Options:**
+  1. **If you have the old key:** Temporarily restore it, export connections, update key, re-import
+  2. **If key is lost:** Users must re-enter all database connections
+
+  **Prevention:**
+  - Store encryption key in secure vault (HashiCorp Vault, AWS Secrets Manager)
+  - Document key rotation procedures before deploying to production
+  - Use the same key across all environments for consistency
+</Accordion>
+
+## Performance Issues
+
+### Slow Dashboard Loading
+
+<Accordion title="Solutions">
+  - Reduce number of charts on single dashboard
+  - Implement query result caching
+  - Optimize database queries (add indexes, use query limits)
+  - Consider using connection pooling for high-traffic deployments
+  - Enable CDN for static assets
+</Accordion>
+
+### High Memory Usage
+
+<Accordion title="Solutions">
+  - Limit result set size (max 10,000 rows recommended)
+  - Increase container/instance memory allocation
+  - Monitor MongoDB connection pool size
+  - Check for memory leaks in custom queries
+
+  ```bash
+  # Check Node.js memory usage
+  node --max-old-space-size=4096 your-app.js
+  ```
+</Accordion>
+
+## Getting Additional Help
+
+<Note>
+  **Debug Mode:** Set `NODE_ENV=development` to enable verbose logging. Review logs for detailed error messages and stack traces.
+</Note>
+
+If you continue experiencing issues:
+
+1. **Check Application Logs:** Most errors include specific details about what went wrong
+2. **Review Environment Variables:** Ensure all required variables are set correctly
+3. **Test Database Connection:** Use a database client to verify credentials work independently
+4. **Check Service Status:** Verify Supabase, MongoDB, and other dependencies are operational
+5. **GitHub Issues:** Search existing issues or create a new one with:
+   - Error messages and stack traces
+   - Environment details (Node version, deployment platform)
+   - Steps to reproduce the issue
+
+<Warning>
+  When reporting issues, **never share**:
+  - Encryption keys
+  - Database passwords or connection strings
+  - API keys or service role keys
+  - Any other sensitive credentials
+</Warning>

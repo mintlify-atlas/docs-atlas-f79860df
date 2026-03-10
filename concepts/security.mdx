@@ -1,0 +1,394 @@
+---
+title: Security Architecture
+description: Understanding Quail BI's security model and data protection measures
+---
+
+## Overview
+
+Quail BI is designed with security as a core principle. This page explains the security architecture, encryption mechanisms, and best practices for protecting your data.
+
+<Note>
+  Quail enforces read-only database queries, encrypts all credentials, and stores connection strings securely using AES-256-GCM encryption.
+</Note>
+
+## Core Security Principles
+
+<CardGroup cols={3}>
+  <Card title="Read-Only Access" icon="lock">
+    All database queries are executed with read-only permissions
+  </Card>
+  <Card title="Encrypted Storage" icon="shield-halved">
+    Database credentials are encrypted before storage
+  </Card>
+  <Card title="Zero Data Retention" icon="trash">
+    Query results are not stored server-side
+  </Card>
+</CardGroup>
+
+## Encryption Architecture
+
+### AES-256-GCM Encryption
+
+Quail uses AES-256-GCM (Advanced Encryption Standard with Galois/Counter Mode) to encrypt sensitive data:
+
+```typescript lib/utils/encryption.ts
+import { createCipheriv, createDecipheriv, randomBytes } from 'crypto';
+
+const ALGORITHM = 'aes-256-gcm';
+const IV_LENGTH = 16;
+const AUTH_TAG_LENGTH = 16;
+const KEY_LENGTH = 32;
+
+export function encrypt(text: string, encryptionKey: string): string {
+  const iv = randomBytes(IV_LENGTH);
+  const key = Buffer.from(encryptionKey, 'base64').slice(0, KEY_LENGTH);
+  
+  const cipher = createCipheriv(ALGORITHM, key, iv);
+  let encrypted = cipher.update(text, 'utf8', 'hex');
+  encrypted += cipher.final('hex');
+  
+  const authTag = cipher.getAuthTag();
+  return `${iv.toString('hex')}:${encrypted}:${authTag.toString('hex')}`;
+}
+
+export function decrypt(encryptedData: string, encryptionKey: string): string {
+  const [ivHex, encrypted, authTagHex] = encryptedData.split(':');
+  const iv = Buffer.from(ivHex, 'hex');
+  const authTag = Buffer.from(authTagHex, 'hex');
+  const key = Buffer.from(encryptionKey, 'base64').slice(0, KEY_LENGTH);
+  
+  const decipher = createDecipheriv(ALGORITHM, key, iv);
+  decipher.setAuthTag(authTag);
+  
+  let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+  decrypted += decipher.final('utf8');
+  
+  return decrypted;
+}
+```
+
+<Info>
+  AES-256-GCM provides both encryption and authentication, protecting against tampering.
+</Info>
+
+### Encryption Key Management
+
+The encryption key is configured via the `NEXT_PUBLIC_ENCRYPTION_KEY` environment variable:
+
+<CodeGroup>
+
+```bash Generate encryption key
+openssl rand -base64 32
+```
+
+```bash .env.local
+NEXT_PUBLIC_ENCRYPTION_KEY=your-32-character-base64-encoded-key
+```
+
+</CodeGroup>
+
+<Warning>
+  **Critical**: The encryption key must be exactly 32 characters (256 bits) when decoded from base64. Never commit this key to version control.
+</Warning>
+
+### What Gets Encrypted
+
+<Accordion title="Database Connection Strings">
+  All database connection strings are encrypted before being stored in MongoDB. This includes:
+  - PostgreSQL connection strings
+  - MySQL connection strings
+  - SQL Server connection strings
+  - Any custom database URLs
+
+  The encryption happens in the browser before sending to the server:
+
+  ```typescript
+  const encryptedConnectionString = encrypt(
+    connectionString,
+    process.env.NEXT_PUBLIC_ENCRYPTION_KEY!
+  );
+  ```
+</Accordion>
+
+<Accordion title="User Credentials">
+  Database usernames and passwords embedded in connection strings are encrypted as part of the full connection string.
+</Accordion>
+
+<Accordion title="API Keys (if configured)">
+  Optional third-party API keys (Stripe, Azure AI) are stored as environment variables and never exposed to the client.
+</Accordion>
+
+## Read-Only Database Access
+
+### Enforcement Mechanism
+
+Quail enforces read-only access at the application level:
+
+```typescript lib/actions/query.ts
+export async function executeQuery(connectionId: string, sql: string) {
+  // Validate query is read-only
+  const isReadOnly = validateReadOnlyQuery(sql);
+  if (!isReadOnly) {
+    throw new Error('Only SELECT queries are allowed');
+  }
+  
+  // Execute with read-only connection
+  const connection = await getConnection(connectionId);
+  const results = await connection.query(sql);
+  
+  return results;
+}
+
+function validateReadOnlyQuery(sql: string): boolean {
+  const normalized = sql.trim().toUpperCase();
+  const writeOperations = ['INSERT', 'UPDATE', 'DELETE', 'DROP', 'CREATE', 'ALTER', 'TRUNCATE'];
+  
+  return !writeOperations.some(op => normalized.startsWith(op));
+}
+```
+
+<Tip>
+  For maximum security, we recommend creating database users with read-only permissions. See [Security Best Practices](/deployment/security-best-practices).
+</Tip>
+
+### Read-Only User Creation
+
+<Tabs>
+  <Tab title="PostgreSQL">
+    ```sql
+    -- Create read-only user
+    CREATE USER quail_readonly WITH PASSWORD 'your_secure_password';
+    
+    -- Grant connect permission
+    GRANT CONNECT ON DATABASE your_database TO quail_readonly;
+    
+    -- Grant usage on schema
+    GRANT USAGE ON SCHEMA public TO quail_readonly;
+    
+    -- Grant select on all tables
+    GRANT SELECT ON ALL TABLES IN SCHEMA public TO quail_readonly;
+    
+    -- Grant select on future tables
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public
+    GRANT SELECT ON TABLES TO quail_readonly;
+    ```
+  </Tab>
+  <Tab title="MySQL">
+    ```sql
+    -- Create read-only user
+    CREATE USER 'quail_readonly'@'%' IDENTIFIED BY 'your_secure_password';
+    
+    -- Grant select permission
+    GRANT SELECT ON your_database.* TO 'quail_readonly'@'%';
+    
+    -- Apply changes
+    FLUSH PRIVILEGES;
+    ```
+  </Tab>
+  <Tab title="SQL Server">
+    ```sql
+    -- Create read-only user
+    CREATE LOGIN quail_readonly WITH PASSWORD = 'your_secure_password';
+    USE your_database;
+    CREATE USER quail_readonly FOR LOGIN quail_readonly;
+    
+    -- Add to db_datareader role
+    ALTER ROLE db_datareader ADD MEMBER quail_readonly;
+    ```
+  </Tab>
+</Tabs>
+
+## Authentication & Authorization
+
+### Supabase Authentication
+
+Quail uses Supabase for user authentication:
+
+```typescript lib/auth/supabase.ts
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
+export async function signIn(email: string, password: string) {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+  
+  if (error) throw error;
+  return data;
+}
+```
+
+<Info>
+  Supabase provides built-in protection against common authentication vulnerabilities like brute force attacks and credential stuffing.
+</Info>
+
+### Session Management
+
+Sessions are managed via HTTP-only cookies:
+
+```typescript middleware.ts
+import { createServerClient } from '@supabase/ssr';
+import { NextResponse, type NextRequest } from 'next/server';
+
+export async function middleware(request: NextRequest) {
+  let response = NextResponse.next();
+  
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return request.cookies.get(name)?.value;
+        },
+        set(name: string, value: string, options: any) {
+          response.cookies.set({ name, value, ...options });
+        },
+        remove(name: string, options: any) {
+          response.cookies.set({ name, value: '', ...options });
+        },
+      },
+    }
+  );
+  
+  await supabase.auth.getSession();
+  return response;
+}
+```
+
+## Network Security
+
+### SSL/TLS Connections
+
+Quail supports SSL/TLS connections to databases:
+
+<Tabs>
+  <Tab title="PostgreSQL">
+    ```typescript
+    const connectionString = 
+      'postgresql://user:pass@host:5432/db?sslmode=require';
+    ```
+    
+    SSL modes:
+    - `disable`: No SSL
+    - `require`: Require SSL (recommended)
+    - `verify-ca`: Verify certificate authority
+    - `verify-full`: Verify CA and hostname
+  </Tab>
+  <Tab title="MySQL">
+    ```typescript
+    const connectionString = 
+      'mysql://user:pass@host:3306/db?ssl={"rejectUnauthorized":true}';
+    ```
+  </Tab>
+  <Tab title="SQL Server">
+    ```typescript
+    const connectionString = 
+      'Server=host;Database=db;User=user;Password=pass;Encrypt=true;TrustServerCertificate=false';
+    ```
+  </Tab>
+</Tabs>
+
+### IP Whitelisting
+
+For production deployments, configure IP whitelisting on your database server. See [Database Connections](/guide/connections) for provider-specific instructions.
+
+## Data Privacy
+
+### What Quail Does NOT Store
+
+<CardGroup cols={2}>
+  <Card title="Query Results" icon="table">
+    Results are returned directly to the user's browser and never stored server-side
+  </Card>
+  <Card title="Raw Connection Strings" icon="link">
+    Only encrypted versions are stored in the database
+  </Card>
+  <Card title="Database Contents" icon="database">
+    Quail never stores or caches table data
+  </Card>
+  <Card title="User Queries" icon="code">
+    SQL queries are not logged or retained after execution
+  </Card>
+</CardGroup>
+
+### What Quail DOES Store
+
+<CardGroup cols={2}>
+  <Card title="User Accounts" icon="user">
+    Email, hashed password (via Supabase), and profile information
+  </Card>
+  <Card title="Encrypted Credentials" icon="lock">
+    AES-256 encrypted database connection strings
+  </Card>
+  <Card title="Dashboard Configurations" icon="grid-2">
+    Dashboard layouts, chart configurations, and filter settings
+  </Card>
+  <Card title="Chat History" icon="comment">
+    Conversation history for the chat interface (without query results)
+  </Card>
+</CardGroup>
+
+## Security Checklist
+
+Before deploying Quail to production:
+
+<Steps>
+  <Step title="Generate Strong Encryption Key">
+    Use `openssl rand -base64 32` to generate a secure encryption key
+  </Step>
+  <Step title="Configure Read-Only Users">
+    Create database users with SELECT-only permissions
+  </Step>
+  <Step title="Enable SSL/TLS">
+    Configure SSL connections for all database connections
+  </Step>
+  <Step title="Whitelist IPs">
+    Configure IP whitelisting on database servers
+  </Step>
+  <Step title="Secure Environment Variables">
+    Use secure secret management (Vercel Secrets, AWS Secrets Manager, etc.)
+  </Step>
+  <Step title="Enable Supabase RLS">
+    Configure Row Level Security policies in Supabase
+  </Step>
+</Steps>
+
+<Card title="Deployment Security Guide" icon="shield" href="/deployment/security-best-practices">
+  Complete guide to securing your Quail deployment
+</Card>
+
+## Reporting Security Issues
+
+<Warning>
+  **Note**: Quail is a discontinued project. For self-hosted deployments, you are responsible for security updates and patches.
+</Warning>
+
+If you discover a security vulnerability in the Quail codebase:
+
+1. **Do not** open a public GitHub issue
+2. Review the code at [github.com/O1af/quail](https://github.com/O1af/quail)
+3. Implement fixes in your own fork
+4. Consider contributing patches via pull request
+
+## Related Documentation
+
+<CardGroup cols={2}>
+  <Card title="Environment Variables" icon="gear" href="/deployment/environment">
+    Configure encryption keys and security settings
+  </Card>
+  <Card title="Security Best Practices" icon="shield-check" href="/deployment/security-best-practices">
+    Production security checklist and guidelines
+  </Card>
+  <Card title="Database Setup" icon="database" href="/deployment/database-setup">
+    Configure secure database connections
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/deployment/troubleshooting">
+    Resolve encryption and authentication issues
+  </Card>
+</CardGroup>

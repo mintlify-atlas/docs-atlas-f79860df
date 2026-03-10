@@ -1,0 +1,395 @@
+---
+title: "Chat Interface"
+description: "Analyze data using natural language queries powered by AI"
+---
+
+## Overview
+
+Quail's Chat interface allows you to explore and analyze your data using natural language. Simply ask questions in plain English, and Quail will automatically generate SQL queries, execute them against your database, and present results in the most appropriate format—whether that's a table, chart, or summary.
+
+## Getting Started
+
+<Steps>
+  <Step title="Open Chat">
+    Click on **Chat** in the main navigation menu to access the chat interface.
+  </Step>
+  
+  <Step title="Select Connection">
+    Make sure you have at least one database connection set up. The chat will use your currently selected connection, which you can change from the dropdown at the top.
+  </Step>
+  
+  <Step title="Ask a Question">
+    Type your question in the chat input field at the bottom of the screen.
+  </Step>
+  
+  <Step title="Send">
+    Press **Enter** or click the **Send** button to submit your question.
+  </Step>
+</Steps>
+
+<Note>
+  The Chat interface works best when you have a clear understanding of your data structure. If you're new to your database, explore the [Schema Explorer](/guide/connections#exploring-your-database-schema) first.
+</Note>
+
+## Asking Effective Questions
+
+The quality of your results depends on how you phrase your questions. Here are examples organized by complexity:
+
+<Tabs>
+  <Tab title="Simple Queries">
+    Start with straightforward questions to explore your data:
+    
+    **Counting and Totals:**
+    - "How many customers do we have?"
+    - "What's the total revenue this year?"
+    - "How many orders were placed today?"
+    
+    **Basic Aggregations:**
+    - "What's our average order value?"
+    - "Show me the most expensive product"
+    - "What's the lowest price in our catalog?"
+    
+    **Recent Data:**
+    - "Show me sales for the last 30 days"
+    - "What are today's orders?"
+    - "List new customers from this week"
+  </Tab>
+  
+  <Tab title="Time-Based Analysis">
+    Ask questions with specific time frames:
+    
+    **Trends Over Time:**
+    - "Show me daily signups for February 2026"
+    - "What's the trend of monthly sales over the past year?"
+    - "How has average order value changed over the last 6 months?"
+    
+    **Comparisons:**
+    - "Compare this month's sales to last month"
+    - "Show year-over-year revenue growth"
+    - "Compare Q1 2026 performance to Q1 2025"
+    
+    **Seasonal Analysis:**
+    - "What were our sales for each quarter in 2025?"
+    - "Show weekly active users for the past 3 months"
+    - "What day of the week has the most orders?"
+  </Tab>
+  
+  <Tab title="Complex Analysis">
+    Progress to more sophisticated analysis:
+    
+    **Rankings and Top Items:**
+    - "Show me the top 10 products by revenue"
+    - "Who are our top 5 customers by total spend?"
+    - "What are the worst-performing products this quarter?"
+    
+    **Multi-Metric Analysis:**
+    - "Show me revenue, cost, and profit margin by product category"
+    - "Compare customer acquisition cost by marketing channel"
+    - "What's the retention rate and churn rate by customer segment?"
+    
+    **Complex Filters:**
+    - "Show sales trends for premium customers in the North region"
+    - "What's the average order value for customers who signed up in 2025?"
+    - "List products with more than 100 units sold but less than 4-star rating"
+  </Tab>
+  
+  <Tab title="Filtering & Grouping">
+    Include filters and grouping in your questions:
+    
+    **Grouped Analysis:**
+    - "Show me sales by region"
+    - "Break down revenue by product category and month"
+    - "What's the average deal size by sales rep?"
+    
+    **With Filters:**
+    - "Show me sales by region for premium customers only"
+    - "What are our top-selling products in the North region?"
+    - "Show customer retention rate grouped by signup source"
+    
+    **Multiple Dimensions:**
+    - "Revenue by product category and customer tier"
+    - "Orders by region, product type, and month"
+    - "Customer lifetime value by acquisition channel and subscription tier"
+  </Tab>
+</Tabs>
+
+## Understanding Chat Responses
+
+Quail provides comprehensive responses that help you understand both the query and the results.
+
+### Query Explanation
+
+For each question, Quail shows you:
+
+<CardGroup cols={3}>
+  <Card title="Generated SQL" icon="code">
+    The exact SQL query that was generated from your natural language question.
+  </Card>
+  
+  <Card title="Plain English Explanation" icon="message">
+    A clear explanation of what the query does and how it answers your question.
+  </Card>
+  
+  <Card title="Assumptions" icon="lightbulb">
+    Any assumptions made during query generation (e.g., date ranges, filters, or table joins).
+  </Card>
+</CardGroup>
+
+<Note>
+  Always review the generated SQL and assumptions to ensure the query matches your intent. You can ask for modifications if needed.
+</Note>
+
+### Results Display
+
+Quail automatically chooses the best way to display your results:
+
+<Tabs>
+  <Tab title="Table View">
+    **Best for:**
+    - Detailed data exploration
+    - Viewing individual records
+    - Exporting data
+    
+    **Features:**
+    - Sortable columns
+    - Pagination for large datasets
+    - Copy individual cells
+    - Export to CSV
+  </Tab>
+  
+  <Tab title="Chart View">
+    **Best for:**
+    - Visualizing trends
+    - Comparing values
+    - Presenting insights
+    
+    **Automatic when:**
+    - Data includes time series
+    - Comparing categories
+    - Showing distributions
+    - Analyzing proportions
+  </Tab>
+  
+  <Tab title="Summary View">
+    **Best for:**
+    - Quick answers
+    - Single metric results
+    - Aggregated information
+    
+    **Shows:**
+    - Large, prominent number
+    - Comparison to previous period (if applicable)
+    - Trend indicator (up/down)
+  </Tab>
+</Tabs>
+
+## Refining Your Results
+
+If the initial results aren't quite what you wanted, you can refine them through conversation:
+
+<Steps>
+  <Step title="Review Results">
+    Look at the generated query, assumptions, and results to identify what needs adjustment.
+  </Step>
+  
+  <Step title="Ask for Modifications">
+    Send a follow-up message with your refinement:
+    - "Can you add profit margin to that?"
+    - "Show only the top 10 results"
+    - "Group by month instead of week"
+    - "Exclude cancelled orders"
+  </Step>
+  
+  <Step title="Iterate">
+    Continue refining until you get exactly what you need. Quail maintains context from previous messages in the conversation.
+  </Step>
+</Steps>
+
+### Examples of Refinements
+
+**Original question:**
+> "Show me monthly sales"
+
+**Follow-up refinements:**
+- "Make it a line chart instead"
+- "Add last year's data for comparison"
+- "Show only the top 5 product categories"
+- "Break it down by region"
+- "Exclude returns and refunds"
+
+## Working with Charts
+
+When Quail generates a chart in response to your question, you have several options:
+
+### Modifying Charts
+
+<Steps>
+  <Step title="Request Changes">
+    Ask Quail to modify the chart:
+    - "Change this to a bar chart"
+    - "Make it a stacked area chart"
+    - "Show percentages instead of absolute values"
+    - "Change the colors"
+  </Step>
+  
+  <Step title="Adjust Data">
+    Modify the underlying data:
+    - "Sort by highest to lowest"
+    - "Show only the last 6 months"
+    - "Add a trend line"
+  </Step>
+</Steps>
+
+### Saving Charts
+
+When you create a chart you want to keep:
+
+<Steps>
+  <Step title="Click Save Chart">
+    Click the **Save Chart** button that appears above the visualization.
+  </Step>
+  
+  <Step title="Add Details">
+    Provide:
+    - **Name**: Descriptive name for the chart
+    - **Description**: Optional details about what the chart shows
+    - **Tags**: For organization
+  </Step>
+  
+  <Step title="Choose Destination">
+    Select where to save:
+    - **Standalone chart**: Save to your charts library
+    - **Add to dashboard**: Place directly on a dashboard
+  </Step>
+  
+  <Step title="Save">
+    Click **Save** to store your chart.
+  </Step>
+</Steps>
+
+## Exporting Data
+
+Export chat results for use in other applications:
+
+<CardGroup cols={2}>
+  <Card title="Export to CSV" icon="file-csv">
+    Click **Export CSV** to download table data as a comma-separated values file.
+  </Card>
+  
+  <Card title="Copy to Clipboard" icon="clipboard">
+    Click **Copy** to copy the current results to your clipboard for pasting into spreadsheets.
+  </Card>
+  
+  <Card title="Share Results" icon="share">
+    Click **Share** to generate a shareable link to the current chat and results.
+  </Card>
+  
+  <Card title="Download Chart" icon="image">
+    For chart results, click **Download** to save as PNG or SVG.
+  </Card>
+</CardGroup>
+
+## Chat History and Sessions
+
+### Managing Conversations
+
+Your chat sessions are automatically saved:
+
+- **Recent chats**: Access from the sidebar
+- **Search conversations**: Find previous questions and results
+- **Continue sessions**: Pick up where you left off
+- **Delete chats**: Remove conversations you no longer need
+
+### Starting a New Session
+
+To start fresh:
+
+1. Click **New Chat** in the top right
+2. Previous context is cleared
+3. You can switch between active sessions from the sidebar
+
+## Tips for Better Results
+
+### Be Specific
+
+<CardGroup cols={2}>
+  <Card title="Vague" icon="x">
+    "Show me sales"
+  </Card>
+  
+  <Card title="Specific" icon="check">
+    "Show me daily sales for the past 30 days grouped by product category"
+  </Card>
+</CardGroup>
+
+### Include Context
+
+<CardGroup cols={2}>
+  <Card title="Unclear" icon="x">
+    "What's the average?"
+  </Card>
+  
+  <Card title="Clear" icon="check">
+    "What's the average order value for premium customers in Q1 2026?"
+  </Card>
+</CardGroup>
+
+### Use Follow-ups
+
+<CardGroup cols={2}>
+  <Card title="Less Efficient" icon="x">
+    Starting a new conversation for each related question
+  </Card>
+  
+  <Card title="More Efficient" icon="check">
+    Building on previous questions in the same conversation
+  </Card>
+</CardGroup>
+
+## Common Patterns
+
+### Exploring New Data
+
+1. "How many records are in the [table_name] table?"
+2. "Show me a sample of 10 rows from [table_name]"
+3. "What columns are in the [table_name] table?"
+4. "What's the date range of data in [table_name]?"
+
+### Monitoring Metrics
+
+1. "What's [metric] today compared to yesterday?"
+2. "Show me [metric] trend for the last 7 days"
+3. "What's the month-to-date [metric]?"
+4. "How does this week's [metric] compare to last week?"
+
+### Finding Issues
+
+1. "Show me orders with no customer information"
+2. "Find duplicate entries in [table_name]"
+3. "List products with no sales in the last 90 days"
+4. "Show me failed transactions from today"
+
+## Limitations and Best Practices
+
+<Warning>
+  The Chat interface generates SQL queries based on your database schema. It works best when:
+  - Your tables and columns have descriptive names
+  - Your database has clear relationships defined
+  - You ask questions about data that exists in your database
+</Warning>
+
+### What Works Well
+
+- Analytical queries (aggregations, trends, comparisons)
+- Exploring data structure and content
+- Creating visualizations from query results
+- Iterative refinement of queries
+
+### What to Use SQL Editor For
+
+- Complex multi-step queries
+- Queries requiring custom functions or procedures
+- Fine-tuning query performance
+- Queries with very specific, complex joins
+
+When you need more control, you can always copy the generated SQL from Chat and modify it in the [SQL Editor](/guide/sql-editor).

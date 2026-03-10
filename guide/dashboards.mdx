@@ -1,0 +1,511 @@
+---
+title: "Dashboards"
+description: "Build and share interactive dashboards to monitor your key metrics"
+---
+
+## Overview
+
+Dashboards in Quail allow you to combine multiple charts and visualizations into a single, cohesive view of your data. Monitor key metrics at a glance, create executive reports, or build department-specific analytics hubs.
+
+## Creating Your First Dashboard
+
+<Steps>
+  <Step title="Navigate to Dashboards">
+    Click on **Dashboards** in the main navigation menu.
+  </Step>
+  
+  <Step title="Create New Dashboard">
+    Click the **+ Create Dashboard** button in the top right corner.
+  </Step>
+  
+  <Step title="Name Your Dashboard">
+    Enter a descriptive name for your dashboard:
+    - "Executive Overview"
+    - "Sales Performance Q1 2026"
+    - "Customer Analytics"
+    - "Daily Operations Monitor"
+  </Step>
+  
+  <Step title="Add Description (Optional)">
+    Provide additional context about what this dashboard tracks and who it's for.
+  </Step>
+  
+  <Step title="Create">
+    Click **Create Dashboard** to proceed.
+  </Step>
+</Steps>
+
+Your new dashboard opens in edit mode, ready for you to add charts and customize the layout.
+
+<Note>
+  Start with a clear purpose for your dashboard. What questions should it answer? Who will use it? This helps you choose the right charts and layout.
+</Note>
+
+## Adding Charts to Your Dashboard
+
+You can only add charts that you've already created and saved. If you need to create new charts, see the [Charts guide](/guide/charts).
+
+<Steps>
+  <Step title="Enter Edit Mode">
+    If you're not already in edit mode, click the **Edit** button in the top right corner.
+  </Step>
+  
+  <Step title="Click Add Chart">
+    Click the **+ Add Chart** button, which appears when in edit mode.
+  </Step>
+  
+  <Step title="Browse Available Charts">
+    A panel opens showing all your saved charts. You can:
+    - Browse all charts
+    - Search by name or tag
+    - Filter by chart type
+    - View chart previews
+  </Step>
+  
+  <Step title="Select Charts">
+    Click on the charts you want to add. Selected charts show a checkmark.
+    
+    You can select multiple charts to add them all at once.
+  </Step>
+  
+  <Step title="Add to Dashboard">
+    Click **Add Selected Charts** at the bottom of the panel.
+  </Step>
+  
+  <Step title="Save Changes">
+    Click **Save Dashboard** to persist your changes.
+  </Step>
+</Steps>
+
+<Note>
+  Charts added to dashboards remain linked to the original chart. If you update the original chart, the changes will automatically appear on all dashboards using it.
+</Note>
+
+## Arranging Your Dashboard Layout
+
+Quail provides a flexible drag-and-drop interface for creating the perfect layout.
+
+### Repositioning Charts
+
+<Steps>
+  <Step title="Enter Edit Mode">
+    Click the **Edit** button if not already in edit mode.
+  </Step>
+  
+  <Step title="Drag Charts">
+    Click and hold on a chart's title bar, then drag it to a new position.
+    
+    As you drag, other charts automatically shift to make room.
+  </Step>
+  
+  <Step title="Drop in Place">
+    Release the mouse button to drop the chart in its new position.
+  </Step>
+</Steps>
+
+### Resizing Charts
+
+<Steps>
+  <Step title="Locate Resize Handle">
+    In edit mode, each chart has resize handles on its corners and edges.
+  </Step>
+  
+  <Step title="Drag to Resize">
+    Click and drag any resize handle to change the chart's dimensions.
+    
+    - **Corner handles**: Resize width and height simultaneously
+    - **Edge handles**: Resize in one direction only
+  </Step>
+  
+  <Step title="Release">
+    Release the mouse button when the chart is the desired size.
+  </Step>
+</Steps>
+
+### Removing Charts
+
+<Steps>
+  <Step title="Locate Remove Button">
+    In edit mode, each chart has an **X** button in its top-right corner.
+  </Step>
+  
+  <Step title="Click to Remove">
+    Click the **X** button to remove the chart from the dashboard.
+  </Step>
+  
+  <Step title="Confirm">
+    Confirm the removal if prompted.
+  </Step>
+</Steps>
+
+<Warning>
+  Removing a chart from a dashboard does not delete the original chart—it only removes it from this dashboard.
+</Warning>
+
+### Layout Tips
+
+**Grid Organization:**
+- Most important metrics at the top
+- Related charts grouped together
+- Consistent sizing for similar chart types
+
+**Visual Hierarchy:**
+- Larger charts for primary metrics
+- Smaller charts for supporting details
+- Use whitespace to separate chart groups
+
+**Responsive Design:**
+- Test how your dashboard looks at different screen sizes
+- Ensure charts are readable on mobile devices
+- Consider creating mobile-specific dashboards for complex layouts
+
+## Dashboard Filters
+
+Filters allow viewers to interact with your dashboard, exploring different cuts of the data without editing the dashboard itself.
+
+### Adding Filters
+
+<Steps>
+  <Step title="Enter Edit Mode">
+    Click the **Edit** button to enter dashboard edit mode.
+  </Step>
+  
+  <Step title="Click Add Filter">
+    Click the **Add Filter** button at the top of the dashboard.
+  </Step>
+  
+  <Step title="Select Filter Field">
+    Choose which data field to filter on:
+    - Date ranges (e.g., "Order Date", "Created At")
+    - Categories (e.g., "Region", "Product Type")
+    - Numeric ranges (e.g., "Revenue", "Customer Age")
+  </Step>
+  
+  <Step title="Choose Filter Type">
+    Select the appropriate filter control:
+    - **Dropdown**: Single or multi-select from a list
+    - **Date Range Picker**: Select start and end dates
+    - **Slider**: Select numeric ranges
+    - **Text Search**: Free-form text search
+  </Step>
+  
+  <Step title="Select Target Charts">
+    Choose which charts this filter should affect. You can:
+    - Apply to all charts
+    - Select specific charts
+    - Exclude certain charts
+  </Step>
+  
+  <Step title="Set Default Value">
+    Optionally set a default filter value that applies when the dashboard first loads.
+  </Step>
+  
+  <Step title="Add Filter">
+    Click **Add Filter** to create the filter.
+  </Step>
+  
+  <Step title="Save Dashboard">
+    Click **Save Dashboard** to persist your filter configuration.
+  </Step>
+</Steps>
+
+### Using Filters
+
+Once filters are added to a dashboard:
+
+1. **Apply Filters**: Click on a filter and select your desired value(s)
+2. **Multiple Filters**: Apply multiple filters to drill down into specific data
+3. **Reset**: Click **Reset Filters** to return to default values
+4. **Save Views**: Bookmark specific filter combinations for quick access
+
+<Note>
+  Filters only affect charts that query the filtered field. If a chart doesn't include the filtered field, it won't be affected.
+</Note>
+
+### Filter Best Practices
+
+**Essential Filters:**
+- Date range (nearly always useful)
+- Primary dimensions (region, product, customer segment)
+- Status or category filters
+
+**Avoid Over-Filtering:**
+- Too many filters can overwhelm users
+- Limit to 3-5 most important filters
+- Consider creating multiple dashboards instead
+
+**Set Smart Defaults:**
+- Default to most commonly used values
+- Current month/quarter for date filters
+- "All" for category filters unless a specific view is more useful
+
+## Sharing Your Dashboard
+
+Make your dashboards accessible to team members and stakeholders.
+
+<Steps>
+  <Step title="Open Dashboard">
+    Navigate to the dashboard you want to share.
+  </Step>
+  
+  <Step title="Click Share">
+    Click the **Share** button in the top right corner.
+  </Step>
+  
+  <Step title="Choose Sharing Method">
+    Select how you want to share:
+    
+    **Private**
+    - Only you can access the dashboard
+    - Default for new dashboards
+    
+    **Public Link**
+    - Anyone with the link can view the dashboard
+    - Useful for sharing with external stakeholders
+    - Viewers don't need a Quail account
+    
+    **Team/Organization**
+    - All members of your team can access
+    - Respects user permissions
+  </Step>
+  
+  <Step title="Set Permission Level">
+    Choose what recipients can do:
+    
+    **View Only**
+    - See the dashboard and refresh data
+    - Apply filters
+    - Cannot modify layout or settings
+    
+    **Edit**
+    - All View permissions
+    - Can add/remove charts
+    - Can modify layout
+    - Can add/remove filters
+  </Step>
+  
+  <Step title="Invite Specific People (Optional)">
+    Enter email addresses to invite specific people:
+    - They receive an email with a link to the dashboard
+    - You can set individual permission levels
+    - You can revoke access later
+  </Step>
+  
+  <Step title="Copy Link">
+    Copy the share link to send via email, Slack, or other channels.
+  </Step>
+</Steps>
+
+### Managing Access
+
+Control who can see and edit your dashboard:
+
+- **View Access List**: See everyone who has access
+- **Modify Permissions**: Change individual permission levels
+- **Revoke Access**: Remove access for specific users
+- **Disable Public Link**: Turn off public link sharing
+
+## Refreshing Dashboard Data
+
+Dashboards automatically refresh their data, but you can also refresh manually.
+
+### Auto-Refresh
+
+<Steps>
+  <Step title="Click Settings">
+    Click the **Settings** icon (gear) in the top right.
+  </Step>
+  
+  <Step title="Enable Auto-Refresh">
+    Toggle **Auto-Refresh** on.
+  </Step>
+  
+  <Step title="Set Interval">
+    Choose refresh interval:
+    - Every 1 minute
+    - Every 5 minutes
+    - Every 15 minutes
+    - Every hour
+  </Step>
+  
+  <Step title="Save">
+    Click **Save Settings**.
+  </Step>
+</Steps>
+
+<Warning>
+  Frequent auto-refresh can impact database performance, especially for dashboards with many charts or complex queries. Use longer intervals unless you need real-time data.
+</Warning>
+
+### Manual Refresh
+
+To refresh all charts on the current dashboard:
+
+1. Click the **Refresh** button (circular arrow icon) in the top right
+2. All charts update with the latest data
+3. Last refresh time is displayed on the dashboard
+
+## Dashboard Templates
+
+Quail provides pre-built dashboard templates for common use cases:
+
+<CardGroup cols={2}>
+  <Card title="Executive Summary" icon="briefcase">
+    High-level KPIs and trends for leadership:
+    - Revenue metrics
+    - Growth indicators  
+    - Key performance trends
+  </Card>
+  
+  <Card title="Sales Dashboard" icon="chart-line">
+    Comprehensive sales analytics:
+    - Sales by region/product
+    - Pipeline metrics
+    - Win rates and deal velocity
+  </Card>
+  
+  <Card title="Customer Analytics" icon="users">
+    Customer behavior and segmentation:
+    - Customer acquisition
+    - Retention and churn
+    - Customer lifetime value
+  </Card>
+  
+  <Card title="Operations Monitor" icon="gauge">
+    Real-time operational metrics:
+    - System health
+    - Transaction volumes
+    - Error rates and alerts
+  </Card>
+</CardGroup>
+
+To use a template:
+
+1. Click **Create Dashboard** → **Use Template**
+2. Select a template
+3. Map template charts to your data sources
+4. Customize as needed
+
+## Exporting Dashboards
+
+Share dashboard snapshots outside of Quail:
+
+<CardGroup cols={2}>
+  <Card title="PDF Export" icon="file-pdf">
+    Generate a PDF report of your dashboard. Perfect for:
+    - Executive reports
+    - Monthly/quarterly reviews
+    - Archiving snapshots
+  </Card>
+  
+  <Card title="Email Schedule" icon="mail">
+    Schedule automated email delivery:
+    - Daily, weekly, or monthly
+    - PDF or screenshot format
+    - To specific recipients
+  </Card>
+  
+  <Card title="Image Export" icon="image">
+    Download dashboard as PNG:
+    - Include in presentations
+    - Share on Slack
+    - Embed in documents
+  </Card>
+  
+  <Card title="Embed Code" icon="code">
+    Embed dashboard in other applications:
+    - Internal wiki pages
+    - Admin panels
+    - Customer portals
+  </Card>
+</CardGroup>
+
+## Best Practices
+
+### Dashboard Design
+
+**Keep It Focused:**
+- One dashboard = one purpose
+- Limit to 6-10 charts per dashboard
+- Create multiple dashboards rather than overcrowding one
+
+**Tell a Story:**
+- Arrange charts in a logical flow
+- Start with overview metrics
+- Drill down to details
+
+**Make It Actionable:**
+- Include context (targets, benchmarks, previous periods)
+- Use colors to highlight issues or opportunities
+- Add notes to explain unusual values
+
+### Performance
+
+**Optimize Query Performance:**
+- Use aggregated data when possible
+- Add indexes to frequently queried columns
+- Limit date ranges in filters
+
+**Reduce Load Times:**
+- Don't include too many charts
+- Use caching for static data
+- Consider lazy-loading for below-the-fold charts
+
+### Maintenance
+
+**Regular Reviews:**
+- Review dashboards monthly
+- Remove outdated charts
+- Update to reflect new business priorities
+
+**Documentation:**
+- Document what each dashboard shows
+- Note any data caveats or limitations
+- Keep ownership information updated
+
+### User Experience
+
+**Mobile-Friendly:**
+- Test on mobile devices
+- Use responsive layouts
+- Consider mobile-specific dashboards for complex layouts
+
+**Accessibility:**
+- Use colorblind-friendly palettes
+- Include text labels, not just colors
+- Ensure sufficient contrast
+
+**Performance:**
+- Optimize for fast loading
+- Use filters instead of creating many similar dashboards
+- Cache frequently viewed dashboards
+
+## Troubleshooting
+
+### Dashboard Not Loading
+
+- Check database connection status
+- Verify all charts are loading individually
+- Try refreshing the page
+- Check browser console for errors
+
+### Charts Not Updating
+
+- Click manual refresh button
+- Check auto-refresh settings
+- Verify database connection is active
+- Confirm queries are still valid
+
+### Layout Issues
+
+- Clear browser cache
+- Try a different browser
+- Reset dashboard layout
+- Check for overlapping charts in edit mode
+
+### Filter Not Working
+
+- Verify charts include the filtered field
+- Check that filter values match data types
+- Ensure filter is applied to target charts
+- Try removing and re-adding the filter

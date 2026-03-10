@@ -1,0 +1,458 @@
+---
+title: AI Integration
+description: How Quail BI uses AI to power natural language queries and intelligent visualizations
+---
+
+## Overview
+
+Quail BI leverages large language models (LLMs) to transform natural language questions into SQL queries, generate visualizations, and provide intelligent insights. This page explains how AI is integrated throughout the platform.
+
+<Note>
+  Quail uses Azure OpenAI Service by default, but can be configured to use other providers supported by the Vercel AI SDK.
+</Note>
+
+## AI Architecture
+
+<CardGroup cols={3}>
+  <Card title="Natural Language to SQL" icon="wand-magic-sparkles">
+    Convert user questions into valid SQL queries
+  </Card>
+  <Card title="Chart Generation" icon="chart-line">
+    Automatically select and configure visualizations
+  </Card>
+  <Card title="Query Explanation" icon="message">
+    Explain SQL queries in plain English
+  </Card>
+</CardGroup>
+
+## Azure OpenAI Integration
+
+### Configuration
+
+Quail is configured to use Azure OpenAI Service through the Vercel AI SDK:
+
+```typescript lib/ai/provider.ts
+import { createAzure } from '@ai-sdk/azure';
+
+const azure = createAzure({
+  apiKey: process.env.AZURE_OPENAI_API_KEY!,
+  endpoint: process.env.AZURE_OPENAI_ENDPOINT!,
+});
+
+export const model = azure(process.env.AZURE_OPENAI_DEPLOYMENT_NAME!);
+```
+
+<Info>
+  Azure OpenAI provides enterprise-grade security, compliance, and data residency options.
+</Info>
+
+### Environment Variables
+
+Configure these environment variables in `.env.local`:
+
+```bash .env.local
+# Azure AI Configuration
+AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
+AZURE_OPENAI_API_KEY=your-api-key-here
+AZURE_OPENAI_DEPLOYMENT_NAME=gpt-4o
+```
+
+<Tabs>
+  <Tab title="Azure OpenAI">
+    **Recommended for production**
+    
+    - Enterprise security and compliance
+    - Data residency controls
+    - No data used for model training
+    - SLA-backed availability
+    
+    Setup:
+    1. Create Azure OpenAI resource
+    2. Deploy GPT-4 or GPT-4o model
+    3. Get endpoint URL and API key
+    4. Configure environment variables
+  </Tab>
+  <Tab title="OpenAI">
+    **Alternative for development**
+    
+    To use OpenAI directly, modify the provider:
+    
+    ```typescript
+    import { openai } from '@ai-sdk/openai';
+    
+    export const model = openai('gpt-4o');
+    ```
+    
+    Set `OPENAI_API_KEY` in your environment.
+  </Tab>
+  <Tab title="Other Providers">
+    **Vercel AI SDK supports:**
+    
+    - Anthropic Claude
+    - Google Gemini
+    - Mistral AI
+    - Cohere
+    - Local models via Ollama
+    
+    See [Vercel AI SDK documentation](https://sdk.vercel.ai/providers) for configuration.
+  </Tab>
+</Tabs>
+
+## AI-Powered Features
+
+### 1. Natural Language to SQL
+
+The chat interface converts natural language questions into SQL queries:
+
+```typescript app/app/api/biChat/route.ts
+import { generateText } from 'ai';
+import { model } from '@/lib/ai/provider';
+
+export async function POST(req: Request) {
+  const { message, schema } = await req.json();
+  
+  const { text: sql } = await generateText({
+    model,
+    system: `You are a SQL expert. Generate SQL queries for the given database schema.
+    
+    Schema:
+    ${JSON.stringify(schema, null, 2)}
+    
+    Rules:
+    - Only generate SELECT queries (read-only)
+    - Use proper SQL syntax
+    - Include appropriate JOINs when needed
+    - Use table aliases for clarity
+    - Return only the SQL query, no explanations`,
+    prompt: message,
+  });
+  
+  return Response.json({ sql });
+}
+```
+
+<Info>
+  The AI receives the full database schema (tables, columns, relationships) but never sees actual data, following the [Agentic Hydration](/concepts/agentic-hydration) pattern.
+</Info>
+
+### 2. Chart Generation
+
+The chart editor uses AI to select and configure visualizations:
+
+```typescript app/app/api/chartEditor/route.ts
+import { generateObject } from 'ai';
+import { z } from 'zod';
+import { model } from '@/lib/ai/provider';
+
+const chartConfigSchema = z.object({
+  type: z.enum(['bar', 'line', 'pie', 'scatter', 'radar', 'polar']),
+  xAxis: z.string().describe('Column name for x-axis'),
+  yAxis: z.array(z.string()).describe('Column names for y-axis'),
+  title: z.string().describe('Chart title'),
+  description: z.string().describe('Brief description'),
+});
+
+export async function POST(req: Request) {
+  const { query, columns } = await req.json();
+  
+  const { object: config } = await generateObject({
+    model,
+    schema: chartConfigSchema,
+    system: 'You are a data visualization expert.',
+    prompt: `Generate chart config for: "${query}"
+    Available columns: ${columns.join(', ')}
+    
+    Choose the most appropriate chart type and axes.`,
+  });
+  
+  return Response.json({ config });
+}
+```
+
+<Tip>
+  The AI only receives column names and the user's query, not the actual data. This drastically reduces token usage and cost.
+</Tip>
+
+### 3. Query Explanation
+
+The SQL editor can explain queries in plain English:
+
+```typescript lib/actions/explain-query.ts
+import { generateText } from 'ai';
+import { model } from '@/lib/ai/provider';
+
+export async function explainQuery(sql: string): Promise<string> {
+  const { text } = await generateText({
+    model,
+    system: `You are a SQL expert who explains queries to non-technical users.
+    Explain what the query does in simple, clear language.`,
+    prompt: `Explain this SQL query:
+
+    ${sql}`,
+  });
+  
+  return text;
+}
+```
+
+### 4. Smart Suggestions
+
+The chat interface provides contextual suggestions:
+
+```typescript lib/ai/suggestions.ts
+import { generateObject } from 'ai';
+import { z } from 'zod';
+import { model } from '@/lib/ai/provider';
+
+const suggestionsSchema = z.object({
+  suggestions: z.array(z.string()).max(5),
+});
+
+export async function getSuggestions(
+  userMessage: string,
+  schema: any
+): Promise<string[]> {
+  const { object } = await generateObject({
+    model,
+    schema: suggestionsSchema,
+    system: 'Generate helpful follow-up questions based on the conversation.',
+    prompt: `User asked: "${userMessage}"
+    
+    Database schema: ${JSON.stringify(schema)}
+    
+    Suggest 5 related questions they might want to ask next.`,
+  });
+  
+  return object.suggestions;
+}
+```
+
+## Token Optimization
+
+### Agentic Hydration Pattern
+
+Quail uses the [Agentic Hydration](/concepts/agentic-hydration) pattern to minimize token usage:
+
+<Steps>
+  <Step title="Schema-Based Generation">
+    Send database schema (structure) to the AI, not actual data
+  </Step>
+  <Step title="Sample Data Only">
+    For chart generation, send only the first row of results
+  </Step>
+  <Step title="Structured Output">
+    Use Zod schemas to constrain AI responses
+  </Step>
+  <Step title="Client-Side Hydration">
+    Inject full data into components after AI generation
+  </Step>
+</Steps>
+
+### Token Usage Comparison
+
+| Feature | Without Optimization | With Agentic Hydration | Savings |
+|---------|---------------------|------------------------|--------|
+| Chart Generation | ~3,500 tokens | ~150 tokens | 95% |
+| SQL Generation | ~2,000 tokens | ~500 tokens | 75% |
+| Query Explanation | ~1,000 tokens | ~800 tokens | 20% |
+
+<Info>
+  These optimizations result in significant cost savings and faster response times.
+</Info>
+
+## Streaming Responses
+
+Quail uses streaming for real-time AI responses:
+
+```typescript app/app/api/chat/route.ts
+import { streamText } from 'ai';
+import { model } from '@/lib/ai/provider';
+
+export async function POST(req: Request) {
+  const { messages } = await req.json();
+  
+  const result = await streamText({
+    model,
+    messages,
+    system: 'You are a helpful data analysis assistant.',
+  });
+  
+  return result.toDataStreamResponse();
+}
+```
+
+On the client:
+
+```typescript components/chat.tsx
+import { useChat } from '@ai-sdk/react';
+
+export function Chat() {
+  const { messages, input, handleInputChange, handleSubmit } = useChat({
+    api: '/api/chat',
+  });
+  
+  return (
+    <form onSubmit={handleSubmit}>
+      {messages.map(m => (
+        <div key={m.id}>
+          {m.role}: {m.content}
+        </div>
+      ))}
+      <input
+        value={input}
+        onChange={handleInputChange}
+        placeholder="Ask a question..."
+      />
+    </form>
+  );
+}
+```
+
+<Tip>
+  Streaming provides instant feedback and improves perceived performance.
+</Tip>
+
+## Error Handling
+
+Robust error handling for AI operations:
+
+```typescript lib/ai/error-handler.ts
+import { AIError } from 'ai';
+
+export async function handleAIOperation<T>(
+  operation: () => Promise<T>
+): Promise<T> {
+  try {
+    return await operation();
+  } catch (error) {
+    if (error instanceof AIError) {
+      // Handle specific AI errors
+      if (error.name === 'AI_RateLimitError') {
+        throw new Error('Rate limit exceeded. Please try again later.');
+      }
+      if (error.name === 'AI_InvalidRequestError') {
+        throw new Error('Invalid request. Please rephrase your question.');
+      }
+    }
+    
+    // Generic error
+    console.error('AI operation failed:', error);
+    throw new Error('AI operation failed. Please try again.');
+  }
+}
+```
+
+## Rate Limiting
+
+Implement rate limiting to prevent abuse:
+
+```typescript middleware.ts
+import { Ratelimit } from '@upstash/ratelimit';
+import { Redis } from '@upstash/redis';
+
+const ratelimit = new Ratelimit({
+  redis: Redis.fromEnv(),
+  limiter: Ratelimit.slidingWindow(10, '1 m'),
+});
+
+export async function middleware(request: Request) {
+  const ip = request.headers.get('x-forwarded-for') ?? 'unknown';
+  const { success } = await ratelimit.limit(ip);
+  
+  if (!success) {
+    return new Response('Rate limit exceeded', { status: 429 });
+  }
+  
+  return NextResponse.next();
+}
+```
+
+<Warning>
+  Without rate limiting, AI endpoints can be expensive if abused.
+</Warning>
+
+## Cost Management
+
+### Token Tracking
+
+Track token usage for cost monitoring:
+
+```typescript lib/ai/tracking.ts
+import { generateText } from 'ai';
+import { model } from '@/lib/ai/provider';
+
+export async function generateWithTracking(
+  prompt: string,
+  userId: string
+) {
+  const result = await generateText({
+    model,
+    prompt,
+  });
+  
+  // Log token usage
+  await logTokenUsage({
+    userId,
+    promptTokens: result.usage?.promptTokens ?? 0,
+    completionTokens: result.usage?.completionTokens ?? 0,
+    totalTokens: result.usage?.totalTokens ?? 0,
+  });
+  
+  return result.text;
+}
+```
+
+### Cost Estimation
+
+Based on GPT-4o pricing (as of 2025):
+
+| Operation | Avg. Tokens | Cost per Request | Requests/Day | Monthly Cost |
+|-----------|-------------|------------------|--------------|-------------|
+| SQL Generation | 500 tokens | $0.0015 | 100 | $4.50 |
+| Chart Config | 150 tokens | $0.00045 | 50 | $0.68 |
+| Query Explanation | 800 tokens | $0.0024 | 20 | $1.44 |
+| **Total** | | | | **$6.62** |
+
+<Info>
+  Actual costs vary based on usage patterns and model pricing.
+</Info>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Use Structured Output" icon="code">
+    Always use Zod schemas with `generateObject` for predictable results
+  </Card>
+  <Card title="Minimize Context" icon="minimize">
+    Send only essential information to reduce token usage
+  </Card>
+  <Card title="Cache Results" icon="database">
+    Cache common queries and chart configurations
+  </Card>
+  <Card title="Implement Fallbacks" icon="shield">
+    Have fallback behavior when AI fails
+  </Card>
+  <Card title="Monitor Usage" icon="chart-line">
+    Track token usage and costs
+  </Card>
+  <Card title="Rate Limit" icon="gauge">
+    Protect against abuse with rate limiting
+  </Card>
+</CardGroup>
+
+## Related Documentation
+
+<CardGroup cols={2}>
+  <Card title="Agentic Hydration" icon="brain" href="/concepts/agentic-hydration">
+    Learn about the pattern that powers efficient AI generation
+  </Card>
+  <Card title="Chat Interface" icon="message" href="/guide/chat">
+    Use natural language to query your data
+  </Card>
+  <Card title="Chart Generation" icon="chart-line" href="/guide/charts">
+    Create visualizations with AI assistance
+  </Card>
+  <Card title="Environment Setup" icon="gear" href="/deployment/environment">
+    Configure Azure AI and other providers
+  </Card>
+</CardGroup>

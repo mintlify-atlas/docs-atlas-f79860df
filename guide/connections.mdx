@@ -1,0 +1,280 @@
+---
+title: "Database Connections"
+description: "Connect and manage your databases securely in Quail"
+---
+
+## Overview
+
+Quail's connection management system allows you to securely connect to your databases with encrypted credentials. All connections are stored with encryption and support multiple database types including PostgreSQL, MySQL, and SQL Server.
+
+## Setting Up Your First Connection
+
+<Steps>
+  <Step title="Navigate to Connections">
+    From the main navigation menu, click on **Connections** to access the connection management page.
+  </Step>
+  
+  <Step title="Add New Connection">
+    Click the **Add Connection** button in the top right corner of the page.
+  </Step>
+  
+  <Step title="Select Database Type">
+    Choose your database type from the dropdown menu:
+    - PostgreSQL
+    - MySQL
+    - SQL Server
+    - Other supported databases
+  </Step>
+  
+  <Step title="Enter Connection Details">
+    Fill in the required connection information:
+    - **Connection Name**: A friendly name you'll recognize (e.g., "Production DB", "Analytics Warehouse")
+    - **Connection String**: Your database connection string in the format:
+      ```
+      postgresql://[username]:[password]@[host]:[port]/[database]
+      ```
+    - **SSL Settings**: Configure SSL requirements if your database requires secure connections
+  </Step>
+</Steps>
+
+<Note>
+  Your connection credentials are encrypted and stored securely. Quail never stores your passwords in plain text.
+</Note>
+
+## Whitelisting Quail's IP Address
+
+<Warning>
+  **Important Security Requirement**
+  
+  Most database providers require you to whitelist IP addresses that can access your database. You must whitelist Quail's IP address in your database security settings before your connection will work.
+  
+  **Quail's IP Address:** Contact your administrator or check your account settings for the current IP address to whitelist.
+</Warning>
+
+### How to Whitelist by Provider
+
+<Tabs>
+  <Tab title="AWS RDS">
+    1. Go to your RDS console in AWS
+    2. Select your database instance
+    3. Click on the **Security Group** associated with your instance
+    4. Under **Inbound Rules**, add a new rule
+    5. Enter Quail's IP address and your database port (typically 5432 for PostgreSQL, 3306 for MySQL)
+    6. Save the security group changes
+  </Tab>
+  
+  <Tab title="Azure SQL">
+    1. Navigate to your Azure SQL server in the Azure Portal
+    2. Select **Networking** from the left sidebar menu
+    3. Under **Firewall rules**, click **Add firewall rule**
+    4. Enter "Quail" as the rule name
+    5. Use Quail's IP address as both the start and end IP
+    6. Click **Save** to apply the changes
+  </Tab>
+  
+  <Tab title="GCP Cloud SQL">
+    1. Open your Cloud SQL instance in Google Cloud Console
+    2. Go to **Connections** → **Networking**
+    3. Under **Authorized networks**, click **Add network**
+    4. Enter "Quail" as the name
+    5. Add Quail's IP address in CIDR notation (e.g., `123.45.67.89/32`)
+    6. Click **Done** and then **Save**
+  </Tab>
+  
+  <Tab title="MongoDB Atlas">
+    1. Go to **Network Access** in your MongoDB Atlas dashboard
+    2. Click **Add IP Address**
+    3. Enter Quail's IP address in both the start and end fields
+    4. Add "Quail" as the description
+    5. Click **Confirm** to save
+  </Tab>
+</Tabs>
+
+## Testing Your Connection
+
+After configuring your connection, it's important to verify that Quail can successfully connect to your database.
+
+<Steps>
+  <Step title="Test the Connection">
+    Click the **Test Connection** button in the connection configuration dialog.
+  </Step>
+  
+  <Step title="Wait for Results">
+    Quail will attempt to establish a connection to your database. This typically takes a few seconds.
+  </Step>
+  
+  <Step title="Review the Results">
+    - **Success**: You'll see a green checkmark and success message. Your connection is ready to use.
+    - **Failure**: You'll see an error message with details about what went wrong. See [Troubleshooting](#troubleshooting-connection-issues) below.
+  </Step>
+  
+  <Step title="Save the Connection">
+    If the test is successful, click **Save** to store your connection configuration.
+  </Step>
+</Steps>
+
+## Managing Your Connections
+
+### Viewing Connection Details
+
+Click on any connection in your connections list to view:
+
+- **Connection Status**: Active or inactive indicator
+- **Last Connected**: Timestamp of the most recent successful connection
+- **Database Schema**: Browse available tables, views, and their structures
+- **Connection Type**: The database type (PostgreSQL, MySQL, etc.)
+
+### Editing a Connection
+
+<Steps>
+  <Step title="Select Connection">
+    Find and click on the connection you want to modify in your connections list.
+  </Step>
+  
+  <Step title="Click Edit">
+    Click the **Edit** button (pencil icon) in the connection details panel.
+  </Step>
+  
+  <Step title="Make Changes">
+    Update any connection details such as the name, connection string, or SSL settings.
+  </Step>
+  
+  <Step title="Test Changes">
+    Click **Test Connection** to verify your updated settings work correctly.
+  </Step>
+  
+  <Step title="Save">
+    Click **Save Changes** to apply your modifications.
+  </Step>
+</Steps>
+
+### Deleting a Connection
+
+<Warning>
+  Deleting a connection cannot be undone. Any charts or dashboards using this connection will no longer work.
+</Warning>
+
+<Steps>
+  <Step title="Select Connection">
+    Click on the connection you want to remove.
+  </Step>
+  
+  <Step title="Click Delete">
+    Click the **Delete** button (trash icon) in the connection details panel.
+  </Step>
+  
+  <Step title="Confirm Deletion">
+    A confirmation dialog will appear. Review the warning about affected charts and dashboards.
+  </Step>
+  
+  <Step title="Confirm">
+    Type the connection name to confirm deletion, then click **Delete Connection**.
+  </Step>
+</Steps>
+
+## Exploring Your Database Schema
+
+Once connected, Quail automatically fetches and displays your database schema, making it easy to explore your data structure.
+
+<Steps>
+  <Step title="Open Schema Explorer">
+    Click on a connection to open the Schema Explorer panel.
+  </Step>
+  
+  <Step title="Browse Tables">
+    The left sidebar displays all tables and views in your database. Tables are organized by schema if your database uses schemas.
+  </Step>
+  
+  <Step title="View Table Details">
+    Click on any table name to see:
+    - Column names and data types
+    - Primary and foreign keys
+    - Indexes
+    - Relationships with other tables
+  </Step>
+  
+  <Step title="Search Schema">
+    Use the search bar at the top of the Schema Explorer to quickly find specific tables, columns, or views.
+  </Step>
+</Steps>
+
+<Note>
+  The Schema Explorer is also available in the SQL Editor and Chat interfaces, making it easy to reference your data structure while writing queries or asking questions.
+</Note>
+
+## Troubleshooting Connection Issues
+
+If you're experiencing problems connecting to your database, here are common issues and solutions:
+
+<CardGroup cols={2}>
+  <Card title="Connection Timeout" icon="clock">
+    **Possible causes:**
+    - Database server is not running
+    - Quail's IP address is not whitelisted
+    - Firewall blocking connections on the database port
+    - Incorrect host or port in connection string
+    
+    **Solutions:**
+    - Verify your database server is running
+    - Double-check IP whitelisting settings
+    - Confirm firewall rules allow traffic on your database port
+    - Verify the host and port in your connection string
+  </Card>
+  
+  <Card title="Authentication Failed" icon="lock">
+    **Possible causes:**
+    - Incorrect username or password
+    - User doesn't have required permissions
+    - Password contains special characters not properly escaped
+    
+    **Solutions:**
+    - Double-check your username and password
+    - Ensure the user has SELECT permissions on the database
+    - Try URL-encoding special characters in your connection string
+  </Card>
+  
+  <Card title="SSL/TLS Errors" icon="shield">
+    **Possible causes:**
+    - SSL settings don't match database requirements
+    - Database requires SSL but connection doesn't specify it
+    - Invalid SSL certificate
+    
+    **Solutions:**
+    - Check if your database requires SSL connections
+    - Add `?sslmode=require` to your connection string if needed
+    - Verify SSL certificate is valid and not expired
+  </Card>
+  
+  <Card title="Database Not Found" icon="database">
+    **Possible causes:**
+    - Database name is misspelled
+    - Database doesn't exist on the server
+    - User doesn't have access to the specified database
+    
+    **Solutions:**
+    - Confirm the database name spelling
+    - Verify the database exists on your server
+    - Check that your user has access to this specific database
+  </Card>
+</CardGroup>
+
+## Best Practices
+
+### Security
+
+- **Use Read-Only Accounts**: Create database users with read-only permissions for Quail connections
+- **Rotate Credentials**: Regularly update database passwords and connection strings
+- **Enable SSL**: Always use SSL/TLS connections when available
+- **Limit Access**: Only whitelist Quail's IP address, not broad IP ranges
+
+### Performance
+
+- **Use Connection Pooling**: For high-traffic databases, ensure your database has adequate connection pooling configured
+- **Monitor Connections**: Keep track of active connections in your connections list
+- **Close Unused Connections**: Remove connections you're no longer using
+
+### Organization
+
+- **Descriptive Names**: Use clear, descriptive names for your connections (e.g., "Production Analytics", "Staging Customer DB")
+- **Consistent Naming**: Establish a naming convention for your team
+- **Document Connections**: Add notes about what each connection is used for

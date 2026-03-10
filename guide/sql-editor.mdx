@@ -1,0 +1,340 @@
+---
+title: "SQL Editor"
+description: "Write, execute, and visualize SQL queries with AI assistance"
+---
+
+## Overview
+
+The SQL Editor in Quail provides a powerful environment for writing and executing SQL queries with intelligent auto-completion, AI assistance, and built-in visualization capabilities.
+
+## Getting Started
+
+<Steps>
+  <Step title="Open SQL Editor">
+    Navigate to **SQL Editor** from the main navigation menu.
+  </Step>
+  
+  <Step title="Select Database Connection">
+    Choose a database connection from the dropdown menu at the top of the editor. If you haven't created a connection yet, see the [Database Connections](/guide/connections) guide.
+  </Step>
+  
+  <Step title="Start Writing">
+    The editor will load with your connection's schema information available in the left sidebar. You can now start writing SQL queries.
+  </Step>
+</Steps>
+
+## Writing SQL Queries
+
+### Basic Query Structure
+
+Start with a simple SELECT query to explore your data:
+
+```sql
+SELECT * FROM customers LIMIT 10;
+```
+
+This returns the first 10 rows from your customers table.
+
+<Note>
+  It's a good practice to include a LIMIT clause when exploring new tables to avoid accidentally fetching large datasets.
+</Note>
+
+### Using the Schema Explorer
+
+The left sidebar contains the Schema Explorer, which helps you navigate your database structure:
+
+<CardGroup cols={2}>
+  <Card title="Browse Tables" icon="table">
+    View all available tables and views in your database. Tables are organized by schema if applicable.
+  </Card>
+  
+  <Card title="View Columns" icon="list">
+    Click on any table to expand it and see all columns with their data types.
+  </Card>
+  
+  <Card title="Quick Insert" icon="plus">
+    Click the **+** icon next to a column name to automatically insert it into your query at the cursor position.
+  </Card>
+  
+  <Card title="Quick Actions" icon="zap">
+    Right-click on a table for quick actions:
+    - SELECT * FROM table
+    - SELECT COUNT(*) FROM table
+    - DESCRIBE table
+  </Card>
+</CardGroup>
+
+### Auto-Completion
+
+The SQL Editor provides intelligent auto-completion to speed up your query writing:
+
+<Tabs>
+  <Tab title="Table Names">
+    Start typing a table name and press **Tab** to auto-complete. The editor shows matching tables from your schema.
+    
+    ```sql
+    SELECT * FROM cus[Tab] -- completes to "customers"
+    ```
+  </Tab>
+  
+  <Tab title="Column Names">
+    After typing a table name and a dot, you'll see column suggestions:
+    
+    ```sql
+    SELECT customers.[Ctrl+Space] -- shows all customer columns
+    ```
+  </Tab>
+  
+  <Tab title="SQL Keywords">
+    SQL keywords like SELECT, FROM, WHERE, JOIN are auto-completed as you type:
+    
+    ```sql
+    SEL[Tab] -- completes to "SELECT"
+    ```
+  </Tab>
+  
+  <Tab title="Functions">
+    Database functions are also suggested:
+    
+    ```sql
+    SELECT COUNT[Tab] -- completes to "COUNT()"
+    ```
+  </Tab>
+</Tabs>
+
+## Running Queries
+
+<Steps>
+  <Step title="Write Your Query">
+    Type or paste your SQL query into the editor.
+  </Step>
+  
+  <Step title="Execute">
+    Click the **Run** button or use the keyboard shortcut:
+    - **Windows/Linux**: `Ctrl + Enter`
+    - **Mac**: `Cmd + Enter`
+  </Step>
+  
+  <Step title="View Results">
+    Query results appear in the results panel below the editor, showing:
+    - Data table with all returned rows
+    - Number of rows returned
+    - Query execution time
+    - Any errors or warnings
+  </Step>
+</Steps>
+
+<Note>
+  You can run multiple queries in sequence by separating them with semicolons. The editor will execute them one at a time and show results for each.
+</Note>
+
+## AI-Assisted Query Writing
+
+Quail's SQL Editor includes AI assistance to help you write queries more efficiently.
+
+### Getting Query Suggestions
+
+<Steps>
+  <Step title="Describe What You Want">
+    Click the **AI Assistant** button or press `Ctrl/Cmd + K` to open the AI prompt.
+  </Step>
+  
+  <Step title="Ask in Natural Language">
+    Describe what you want to query in plain English:
+    - "Show me the top 10 customers by revenue"
+    - "Get average order value by month for the last year"
+    - "Find all customers who haven't ordered in 90 days"
+  </Step>
+  
+  <Step title="Review Generated SQL">
+    The AI will generate SQL based on your request and show you the query before executing it.
+  </Step>
+  
+  <Step title="Execute or Modify">
+    You can either:
+    - Click **Run** to execute the generated query
+    - Click **Insert** to add it to your editor for modification
+    - Click **Regenerate** if you want a different approach
+  </Step>
+</Steps>
+
+### Explaining Queries
+
+Don't understand a complex query? The AI can explain it:
+
+1. Select the query (or part of it) in the editor
+2. Right-click and choose **Explain Query**
+3. The AI will provide a plain-English explanation of what the query does
+
+## Visualizing Query Results
+
+Turn your query results into charts directly from the SQL Editor:
+
+<Steps>
+  <Step title="Execute Your Query">
+    Run a query that returns data suitable for visualization (typically aggregated data).
+  </Step>
+  
+  <Step title="Switch to Visualize Tab">
+    Click the **Visualize** tab in the results panel.
+  </Step>
+  
+  <Step title="Choose Chart Type">
+    Select a chart type that suits your data:
+    - **Bar Chart**: Compare values across categories
+    - **Line Chart**: Show trends over time
+    - **Pie Chart**: Display proportions and percentages
+    - **Scatter Plot**: Show relationships between variables
+  </Step>
+  
+  <Step title="Configure Chart">
+    Map your query columns to chart axes:
+    - **X-Axis**: Usually your dimension or category
+    - **Y-Axis**: Your measure or metric
+    - **Series**: For grouped data (optional)
+  </Step>
+  
+  <Step title="Apply Formatting">
+    Customize your chart:
+    - Colors and themes
+    - Axis labels and titles
+    - Legend position
+    - Number formatting
+  </Step>
+</Steps>
+
+### Saving Charts
+
+Once you've created a visualization you like:
+
+<Steps>
+  <Step title="Click Save Chart">
+    Click the **Save Chart** button above the visualization.
+  </Step>
+  
+  <Step title="Add Details">
+    Provide:
+    - **Chart name**: Descriptive name for the chart
+    - **Description**: What the chart shows (optional)
+    - **Tags**: For organization and searchability
+  </Step>
+  
+  <Step title="Choose Destination">
+    Select where to save your chart:
+    - **Save as new chart**: Creates a standalone chart
+    - **Add to dashboard**: Adds directly to an existing dashboard
+  </Step>
+  
+  <Step title="Confirm">
+    Click **Save** to store your chart.
+  </Step>
+</Steps>
+
+<Note>
+  Saved charts remember both the query and visualization configuration, making them easy to refresh with updated data.
+</Note>
+
+## Query History
+
+Quail automatically saves your query history:
+
+- Access previous queries from the **History** panel on the right
+- Click any historical query to load it into the editor
+- Star frequently used queries for quick access
+- Search your history by query text or date
+
+## Keyboard Shortcuts
+
+Speed up your workflow with these keyboard shortcuts:
+
+<CardGroup cols={2}>
+  <Card title="Execute Query">
+    **Ctrl/Cmd + Enter**
+    
+    Run the current query
+  </Card>
+  
+  <Card title="AI Assistant">
+    **Ctrl/Cmd + K**
+    
+    Open AI query assistant
+  </Card>
+  
+  <Card title="Format Query">
+    **Ctrl/Cmd + Shift + F**
+    
+    Auto-format your SQL for readability
+  </Card>
+  
+  <Card title="Comment Lines">
+    **Ctrl/Cmd + /**
+    
+    Toggle comment on selected lines
+  </Card>
+  
+  <Card title="Find & Replace">
+    **Ctrl/Cmd + F**
+    
+    Search within your query
+  </Card>
+  
+  <Card title="New Tab">
+    **Ctrl/Cmd + T**
+    
+    Open a new editor tab
+  </Card>
+</CardGroup>
+
+## Working with Multiple Queries
+
+### Query Tabs
+
+Open multiple queries simultaneously using tabs:
+
+- Click the **+** button to create a new tab
+- Each tab can use a different database connection
+- Switch between tabs with `Ctrl/Cmd + 1-9`
+- Close tabs with the X or `Ctrl/Cmd + W`
+
+### Saving Query Sessions
+
+Save a collection of related queries:
+
+1. Open all the queries you want to save in different tabs
+2. Click **Save Session** in the top menu
+3. Give your session a name
+4. Later, load the session to restore all queries
+
+## Best Practices
+
+### Query Performance
+
+- **Use LIMIT**: Always limit results when exploring large tables
+- **Be Specific**: Select only the columns you need instead of using SELECT *
+- **Add Indexes**: Consider asking your DBA to add indexes for frequently queried columns
+- **Use WHERE Clauses**: Filter data at the database level rather than after fetching
+
+### Query Organization
+
+- **Add Comments**: Document complex logic with SQL comments
+```sql
+-- Calculate 30-day active users
+SELECT COUNT(DISTINCT user_id) 
+FROM events 
+WHERE event_date >= CURRENT_DATE - INTERVAL '30 days';
+```
+
+- **Format Consistently**: Use the auto-formatter for consistent, readable SQL
+- **Save Reusable Queries**: Star queries you use frequently
+- **Use Descriptive Names**: When saving queries, use clear names that indicate their purpose
+
+### Security
+
+<Warning>
+  Never include sensitive data like passwords or API keys in your queries. Use parameters or environment variables instead.
+</Warning>
+
+- Use read-only database connections when possible
+- Be cautious with UPDATE, DELETE, and DROP statements
+- Test queries on sample data before running on production databases
+- Review generated AI queries before executing them

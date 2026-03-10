@@ -1,0 +1,456 @@
+---
+title: Environment Variables
+description: Complete guide to configuring Quail BI environment variables
+---
+
+## Overview
+
+Quail BI uses environment variables for configuration. All variables should be defined in a `.env.local` file in the project root.
+
+<Warning>
+  Never commit `.env.local` to version control. Use `.env.example` as a template.
+</Warning>
+
+## Required Variables
+
+These variables must be configured for Quail to function:
+
+### Encryption Key
+
+```bash .env.local
+NEXT_PUBLIC_ENCRYPTION_KEY=your-32-character-base64-encoded-key
+```
+
+<Info>
+  **Purpose**: Encrypts database connection strings using AES-256-GCM before storing them.
+</Info>
+
+Generate a secure key:
+
+```bash
+openssl rand -base64 32
+```
+
+<Warning>
+  The key must be exactly 32 bytes (256 bits) when decoded from base64. If the application throws an encryption error on startup, regenerate the key.
+</Warning>
+
+### Supabase Configuration
+
+```bash .env.local
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-public-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-secret-key
+```
+
+<CardGroup cols={3}>
+  <Card title="SUPABASE_URL" icon="link">
+    Your Supabase project URL from the dashboard
+  </Card>
+  <Card title="ANON_KEY" icon="key">
+    Public anonymous key for client-side auth
+  </Card>
+  <Card title="SERVICE_ROLE_KEY" icon="shield">
+    Secret key for server-side operations
+  </Card>
+</CardGroup>
+
+**Where to find these:**
+
+<Steps>
+  <Step title="Open Supabase Dashboard">
+    Navigate to your project at [app.supabase.com](https://app.supabase.com)
+  </Step>
+  <Step title="Go to Settings">
+    Click **Settings** in the sidebar, then **API**
+  </Step>
+  <Step title="Copy Keys">
+    Copy the Project URL, `anon` `public` key, and `service_role` `secret` key
+  </Step>
+</Steps>
+
+### MongoDB Configuration
+
+```bash .env.local
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/database_name
+```
+
+<Info>
+  **Purpose**: Stores user accounts, database connections (encrypted), dashboards, and chat history.
+</Info>
+
+**Connection string format:**
+
+<Tabs>
+  <Tab title="MongoDB Atlas">
+    ```
+    mongodb+srv://username:password@cluster.mongodb.net/database_name?retryWrites=true&w=majority
+    ```
+  </Tab>
+  <Tab title="Local MongoDB">
+    ```
+    mongodb://localhost:27017/quail
+    ```
+  </Tab>
+  <Tab title="Docker MongoDB">
+    ```
+    mongodb://mongodb:27017/quail
+    ```
+  </Tab>
+  <Tab title="With Authentication">
+    ```
+    mongodb://username:password@localhost:27017/quail?authSource=admin
+    ```
+  </Tab>
+</Tabs>
+
+## Optional Variables
+
+### Default Database Connection
+
+```bash .env.local
+NEXT_PUBLIC_DEFAULT_DB_CONNECTION_STRING=
+```
+
+<Info>
+  **Purpose**: Optional demo/test database connection string shown to users.
+</Info>
+
+Leave empty in production or provide a read-only demo database.
+
+### Azure AI Configuration
+
+```bash .env.local
+AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
+AZURE_OPENAI_API_KEY=your-api-key
+AZURE_OPENAI_DEPLOYMENT_NAME=gpt-4o
+```
+
+<Info>
+  **Purpose**: Enables AI-powered features like natural language to SQL, chart generation, and query explanations.
+</Info>
+
+<Steps>
+  <Step title="Create Azure OpenAI Resource">
+    In Azure Portal, create an Azure OpenAI resource
+  </Step>
+  <Step title="Deploy Model">
+    Deploy a GPT-4 or GPT-4o model
+  </Step>
+  <Step title="Get Credentials">
+    Copy the endpoint URL and API key from **Keys and Endpoint**
+  </Step>
+  <Step title="Set Deployment Name">
+    Use the exact deployment name you created (e.g., `gpt-4o`, `gpt-4-turbo`)
+  </Step>
+</Steps>
+
+<Tip>
+  If you don't configure Azure AI, you can still use Quail, but AI-powered features will be disabled.
+</Tip>
+
+### Stripe Configuration
+
+```bash .env.local
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+```
+
+<Info>
+  **Purpose**: Enables subscription billing and payment processing (if implementing paid features).
+</Info>
+
+<Note>
+  Stripe integration is optional. Quail can run without payment processing.
+</Note>
+
+### Application URL
+
+```bash .env.local
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+<Info>
+  **Purpose**: Base URL for the application, used for redirects and webhooks.
+</Info>
+
+Change this to your production domain:
+
+```bash
+NEXT_PUBLIC_APP_URL=https://quail.yourdomain.com
+```
+
+## Environment Variable Reference
+
+### Complete `.env.local` Template
+
+```bash .env.local
+# ========================================
+# REQUIRED VARIABLES
+# ========================================
+
+# Encryption Key (REQUIRED)
+# Generate with: openssl rand -base64 32
+NEXT_PUBLIC_ENCRYPTION_KEY=
+
+# Supabase Configuration (REQUIRED)
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+
+# MongoDB Configuration (REQUIRED)
+MONGODB_URI=
+
+# ========================================
+# OPTIONAL VARIABLES
+# ========================================
+
+# Default Database Connection (optional)
+NEXT_PUBLIC_DEFAULT_DB_CONNECTION_STRING=
+
+# Azure AI Configuration (optional)
+AZURE_OPENAI_ENDPOINT=
+AZURE_OPENAI_API_KEY=
+AZURE_OPENAI_DEPLOYMENT_NAME=
+
+# Stripe Configuration (optional)
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
+
+# Application Settings (optional)
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+## Platform-Specific Configuration
+
+### Vercel
+
+Add environment variables in the Vercel dashboard:
+
+<Steps>
+  <Step title="Open Project Settings">
+    Navigate to your project, then **Settings → Environment Variables**
+  </Step>
+  <Step title="Add Each Variable">
+    Add all required variables from your `.env.local`
+  </Step>
+  <Step title="Select Environments">
+    Choose Production, Preview, and/or Development
+  </Step>
+  <Step title="Redeploy">
+    Trigger a new deployment for changes to take effect
+  </Step>
+</Steps>
+
+<Tip>
+  Use different values for Production and Preview environments (e.g., separate Supabase projects for staging).
+</Tip>
+
+### Docker
+
+Pass environment variables to Docker:
+
+<Tabs>
+  <Tab title=".env file">
+    ```bash
+    docker run -p 3000:3000 --env-file .env.local quail-bi
+    ```
+  </Tab>
+  <Tab title="Individual -e flags">
+    ```bash
+    docker run -p 3000:3000 \
+      -e NEXT_PUBLIC_ENCRYPTION_KEY=your-key \
+      -e NEXT_PUBLIC_SUPABASE_URL=https://... \
+      -e MONGODB_URI=mongodb+srv://... \
+      quail-bi
+    ```
+  </Tab>
+  <Tab title="Docker Compose">
+    ```yaml docker-compose.yml
+    version: '3.8'
+    services:
+      quail:
+        image: quail-bi
+        ports:
+          - '3000:3000'
+        env_file:
+          - .env.local
+    ```
+  </Tab>
+</Tabs>
+
+### Kubernetes
+
+Use ConfigMaps and Secrets:
+
+```yaml kubernetes/secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: quail-secrets
+type: Opaque
+stringData:
+  NEXT_PUBLIC_ENCRYPTION_KEY: your-key
+  SUPABASE_SERVICE_ROLE_KEY: your-service-role-key
+  MONGODB_URI: mongodb+srv://...
+  AZURE_OPENAI_API_KEY: your-api-key
+  STRIPE_SECRET_KEY: sk_...
+  STRIPE_WEBHOOK_SECRET: whsec_...
+```
+
+```yaml kubernetes/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: quail-config
+data:
+  NEXT_PUBLIC_SUPABASE_URL: https://your-project.supabase.co
+  NEXT_PUBLIC_APP_URL: https://quail.yourdomain.com
+  AZURE_OPENAI_ENDPOINT: https://your-resource.openai.azure.com/
+  AZURE_OPENAI_DEPLOYMENT_NAME: gpt-4o
+```
+
+```yaml kubernetes/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: quail
+spec:
+  template:
+    spec:
+      containers:
+      - name: quail
+        image: quail-bi:latest
+        envFrom:
+        - configMapRef:
+            name: quail-config
+        - secretRef:
+            name: quail-secrets
+```
+
+### AWS, Azure, GCP
+
+<Tabs>
+  <Tab title="AWS">
+    Use **AWS Systems Manager Parameter Store** or **Secrets Manager**:
+    
+    ```bash
+    # Store secrets
+    aws secretsmanager create-secret \
+      --name quail/encryption-key \
+      --secret-string "your-key"
+    
+    # Reference in application
+    const key = await getSecretValue('quail/encryption-key');
+    ```
+  </Tab>
+  <Tab title="Azure">
+    Use **Azure Key Vault**:
+    
+    ```bash
+    # Store secrets
+    az keyvault secret set \
+      --vault-name quail-vault \
+      --name encryption-key \
+      --value "your-key"
+    
+    # Reference in App Service
+    @Microsoft.KeyVault(SecretUri=https://quail-vault.vault.azure.net/secrets/encryption-key/)
+    ```
+  </Tab>
+  <Tab title="GCP">
+    Use **Secret Manager**:
+    
+    ```bash
+    # Store secrets
+    echo -n "your-key" | gcloud secrets create encryption-key \
+      --data-file=-
+    
+    # Grant access
+    gcloud secrets add-iam-policy-binding encryption-key \
+      --member="serviceAccount:your-service@project.iam.gserviceaccount.com" \
+      --role="roles/secretmanager.secretAccessor"
+    ```
+  </Tab>
+</Tabs>
+
+## Security Best Practices
+
+<Warning>
+  **Never expose secret environment variables to the client.** Only variables prefixed with `NEXT_PUBLIC_` are exposed to the browser.
+</Warning>
+
+<CardGroup cols={2}>
+  <Card title="Use Secret Management" icon="vault">
+    Store secrets in platform-specific secret managers, not in environment files
+  </Card>
+  <Card title="Rotate Keys Regularly" icon="rotate">
+    Change encryption keys and API keys periodically
+  </Card>
+  <Card title="Use Different Keys per Environment" icon="layer-group">
+    Never reuse production keys in development or staging
+  </Card>
+  <Card title="Restrict Access" icon="lock">
+    Limit who can view or modify environment variables
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+<Accordion title="Application fails with 'NEXT_PUBLIC_ENCRYPTION_KEY is not defined'">
+  The encryption key is missing or not set correctly:
+  
+  1. Verify `.env.local` exists in the project root
+  2. Check the variable name matches exactly: `NEXT_PUBLIC_ENCRYPTION_KEY`
+  3. Ensure there are no spaces around the `=` sign
+  4. Restart the development server after changes
+  
+  ```bash
+  # Generate a new key
+  openssl rand -base64 32
+  
+  # Add to .env.local
+  echo "NEXT_PUBLIC_ENCRYPTION_KEY=$(openssl rand -base64 32)" >> .env.local
+  ```
+</Accordion>
+
+<Accordion title="Encryption fails with 'Invalid key length'">
+  The encryption key must be exactly 32 bytes when decoded:
+  
+  ```bash
+  # Test key length
+  echo "your-key" | base64 -d | wc -c
+  # Should output: 32
+  
+  # If not 32, regenerate:
+  openssl rand -base64 32
+  ```
+</Accordion>
+
+<Accordion title="Environment variables not loading in production">
+  Platform-specific issues:
+  
+  - **Vercel**: Ensure variables are added in dashboard and deployment is triggered
+  - **Docker**: Verify `--env-file` path or `-e` flags are correct
+  - **Kubernetes**: Check ConfigMap and Secret are applied and referenced
+  - **Others**: Ensure environment variables are set before running `node server.js`
+</Accordion>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Database Setup" icon="database" href="/deployment/database-setup">
+    Configure MongoDB and Supabase
+  </Card>
+  <Card title="Configuration" icon="sliders" href="/deployment/configuration">
+    Advanced configuration options
+  </Card>
+  <Card title="Security" icon="shield" href="/deployment/security-best-practices">
+    Secure your environment variables
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/deployment/troubleshooting">
+    Fix common environment issues
+  </Card>
+</CardGroup>

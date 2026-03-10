@@ -1,0 +1,389 @@
+---
+title: Installation
+description: Install and set up Quail BI for self-hosting
+---
+
+## Prerequisites
+
+Before installing Quail BI, ensure you have the following:
+
+<CardGroup cols={2}>
+  <Card title="Node.js" icon="node-js">
+    Version 18.17.0 or higher
+  </Card>
+  <Card title="Package Manager" icon="box">
+    pnpm 10.10.0 (recommended), npm, or yarn
+  </Card>
+  <Card title="MongoDB" icon="database">
+    MongoDB instance for storing user data and configurations
+  </Card>
+  <Card title="Supabase" icon="shield">
+    Supabase project for authentication
+  </Card>
+</CardGroup>
+
+<Note>
+  Quail is a discontinued project. This documentation is for self-hosting purposes.
+</Note>
+
+## Step 1: Clone the Repository
+
+Clone the Quail repository from GitHub:
+
+<CodeGroup>
+
+```bash SSH
+git clone git@github.com:O1af/quail.git
+cd quail
+```
+
+```bash HTTPS
+git clone https://github.com/O1af/quail.git
+cd quail
+```
+
+</CodeGroup>
+
+## Step 2: Install Dependencies
+
+Quail uses pnpm as its package manager:
+
+<CodeGroup>
+
+```bash pnpm (recommended)
+# Install pnpm globally if not already installed
+npm install -g pnpm@10.10.0
+
+# Install dependencies
+pnpm install
+```
+
+```bash npm
+npm install
+```
+
+```bash yarn
+yarn install
+```
+
+</CodeGroup>
+
+<Info>
+  The project specifies Node.js ≥18.17.0 in `package.json` engines field. Using an older version may cause compatibility issues.
+</Info>
+
+## Step 3: Configure Environment Variables
+
+Copy the example environment file:
+
+```bash
+cp .env.example .env.local
+```
+
+Edit `.env.local` with your configuration. See [Environment Variables](/deployment/environment) for detailed explanations of each variable.
+
+### Required Variables
+
+At minimum, you must configure:
+
+```bash .env.local
+# Encryption (REQUIRED)
+NEXT_PUBLIC_ENCRYPTION_KEY=your-32-character-key
+
+# Supabase (REQUIRED)
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+
+# MongoDB (REQUIRED)
+MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/quail
+```
+
+<Warning>
+  The `NEXT_PUBLIC_ENCRYPTION_KEY` must be exactly 32 characters when base64-decoded. Generate it with:
+  
+  ```bash
+  openssl rand -base64 32
+  ```
+</Warning>
+
+## Step 4: Set Up Database Services
+
+Quail requires two database services:
+
+### MongoDB Setup
+
+<Steps>
+  <Step title="Create MongoDB Database">
+    Create a MongoDB database using MongoDB Atlas, a local instance, or any MongoDB-compatible service.
+  </Step>
+  <Step title="Get Connection String">
+    Obtain your connection string in the format:
+    
+    ```
+    mongodb+srv://username:password@cluster.mongodb.net/database_name
+    ```
+  </Step>
+  <Step title="Configure Environment">
+    Add the connection string to `MONGODB_URI` in `.env.local`
+  </Step>
+</Steps>
+
+### Supabase Setup
+
+<Steps>
+  <Step title="Create Supabase Project">
+    Sign up at [supabase.com](https://supabase.com) and create a new project.
+  </Step>
+  <Step title="Get API Keys">
+    Navigate to **Settings → API** in your Supabase dashboard and copy:
+    - Project URL
+    - `anon` `public` key
+    - `service_role` `secret` key
+  </Step>
+  <Step title="Configure Environment">
+    Add these to your `.env.local` file
+  </Step>
+</Steps>
+
+See [Database Setup](/deployment/database-setup) for detailed instructions.
+
+## Step 5: Run Development Server
+
+Start the development server:
+
+<CodeGroup>
+
+```bash pnpm
+pnpm dev
+```
+
+```bash npm
+npm run dev
+```
+
+```bash yarn
+yarn dev
+```
+
+</CodeGroup>
+
+The application will start at [http://localhost:3000](http://localhost:3000).
+
+<Info>
+  Quail uses Turbopack for faster development builds via the `--turbopack` flag in the dev script.
+</Info>
+
+## Step 6: Build for Production
+
+When you're ready to deploy:
+
+<Steps>
+  <Step title="Build the Application">
+    ```bash
+    pnpm build
+    ```
+    
+    This creates an optimized production build in `.next/`
+  </Step>
+  <Step title="Start Production Server">
+    ```bash
+    pnpm start
+    ```
+    
+    The production server runs on port 3000 by default.
+  </Step>
+</Steps>
+
+### Standalone Build
+
+The build script includes additional steps for standalone deployment:
+
+```bash package.json
+"build": "next build && cp -r .next/static .next/standalone/.next/ && cp -r public .next/standalone/"
+```
+
+This creates a standalone build that includes all necessary files for deployment.
+
+## Deployment Options
+
+### Vercel (Recommended)
+
+<Steps>
+  <Step title="Connect Repository">
+    Import your Quail repository in the Vercel dashboard
+  </Step>
+  <Step title="Configure Environment Variables">
+    Add all required environment variables in the Vercel project settings
+  </Step>
+  <Step title="Deploy">
+    Vercel automatically builds and deploys your application
+  </Step>
+</Steps>
+
+<Tip>
+  Vercel provides zero-config deployment for Next.js applications.
+</Tip>
+
+### Docker
+
+Create a `Dockerfile`:
+
+```dockerfile Dockerfile
+FROM node:18-alpine AS base
+
+# Install dependencies
+FROM base AS deps
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+
+COPY package.json pnpm-lock.yaml ./
+RUN npm install -g pnpm@10.10.0 && pnpm install --frozen-lockfile
+
+# Build application
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+ENV NEXT_TELEMETRY_DISABLED 1
+RUN npm install -g pnpm@10.10.0 && pnpm build
+
+# Production image
+FROM base AS runner
+WORKDIR /app
+
+ENV NODE_ENV production
+ENV NEXT_TELEMETRY_DISABLED 1
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+USER nextjs
+
+EXPOSE 3000
+
+ENV PORT 3000
+ENV HOSTNAME "0.0.0.0"
+
+CMD ["node", "server.js"]
+```
+
+Build and run:
+
+```bash
+docker build -t quail-bi .
+docker run -p 3000:3000 --env-file .env.local quail-bi
+```
+
+### Other Platforms
+
+<Tabs>
+  <Tab title="AWS">
+    Deploy to AWS using:
+    - **Amplify**: Connect GitHub repo for automatic deployments
+    - **Elastic Beanstalk**: Upload standalone build
+    - **ECS**: Use Docker container
+    - **Lambda**: Use Serverless Next.js
+  </Tab>
+  <Tab title="Azure">
+    Deploy to Azure using:
+    - **Static Web Apps**: Connect GitHub repo
+    - **App Service**: Deploy standalone build
+    - **Container Instances**: Use Docker container
+  </Tab>
+  <Tab title="GCP">
+    Deploy to Google Cloud using:
+    - **Cloud Run**: Use Docker container
+    - **App Engine**: Deploy standalone build
+    - **Compute Engine**: Manual deployment
+  </Tab>
+  <Tab title="Self-Hosted">
+    Deploy to your own server:
+    
+    1. Build the application: `pnpm build`
+    2. Copy `.next/standalone` to your server
+    3. Install Node.js 18.17.0+ on the server
+    4. Set environment variables
+    5. Run: `node server.js`
+    6. Use nginx or Apache as reverse proxy
+  </Tab>
+</Tabs>
+
+## Post-Installation
+
+After installation:
+
+<Steps>
+  <Step title="Create Admin Account">
+    Visit `/signup` to create your first user account
+  </Step>
+  <Step title="Configure Database Connections">
+    Add your first database connection in the UI
+  </Step>
+  <Step title="Test Query">
+    Run a test query to verify everything works
+  </Step>
+</Steps>
+
+## Troubleshooting
+
+<Accordion title="Build fails with 'Cannot find module'">
+  Ensure you've run `pnpm install` and all dependencies are installed:
+  
+  ```bash
+  rm -rf node_modules .next
+  pnpm install
+  pnpm build
+  ```
+</Accordion>
+
+<Accordion title="Application starts but shows error page">
+  Check that all required environment variables are set:
+  
+  ```bash
+  # Verify .env.local exists and contains required variables
+  cat .env.local | grep NEXT_PUBLIC_ENCRYPTION_KEY
+  ```
+</Accordion>
+
+<Accordion title="Cannot connect to MongoDB">
+  Verify your MongoDB connection string:
+  
+  1. Check the URI format
+  2. Ensure network access is allowed
+  3. Verify username and password
+  4. Test connection with MongoDB Compass
+</Accordion>
+
+<Accordion title="Supabase authentication fails">
+  Verify Supabase configuration:
+  
+  1. Check that all three Supabase environment variables are set
+  2. Verify the project URL is correct
+  3. Ensure keys are from the same project
+  4. Check that email authentication is enabled in Supabase dashboard
+</Accordion>
+
+For more troubleshooting help, see [Troubleshooting](/deployment/troubleshooting).
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Environment Variables" icon="gear" href="/deployment/environment">
+    Complete guide to all environment variables
+  </Card>
+  <Card title="Database Setup" icon="database" href="/deployment/database-setup">
+    Detailed MongoDB and Supabase configuration
+  </Card>
+  <Card title="Configuration" icon="sliders" href="/deployment/configuration">
+    Customize Quail for your needs
+  </Card>
+  <Card title="Security" icon="shield" href="/deployment/security-best-practices">
+    Secure your deployment
+  </Card>
+</CardGroup>
